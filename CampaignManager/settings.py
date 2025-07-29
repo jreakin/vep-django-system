@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'integrations',
     'canvassing',
     'campaigns',
+    'frontend',
 ]
 
 MIDDLEWARE = [
