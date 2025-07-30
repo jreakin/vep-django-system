@@ -80,7 +80,7 @@ class AuthPIN(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.pin:
-            self.pin = str(random.randint(100000, 999999))
+            self.pin = f"{secrets.randbelow(1000000):06}"
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(minutes=10)  # PIN expires in 10 minutes
         super().save(*args, **kwargs)
