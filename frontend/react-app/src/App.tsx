@@ -7,6 +7,8 @@ import { store } from './store/index'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/auth/Login'
+import CampaignList from './pages/campaigns/CampaignList'
+import VoterData from './pages/voter-data/VoterData'
 import './index.css'
 
 // Create Material-UI theme
@@ -55,6 +57,8 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/campaigns" element={<CampaignList />} />
+                    <Route path="/voter-data" element={<VoterData />} />
                   </Routes>
                 </Layout>
               } />
