@@ -10,6 +10,7 @@ from .serializers import (
     CountyAccountSerializer, CampaignAccountSerializer, VendorAccountSerializer,
     VolunteerInviteSerializer
 )
+from .permissions import IsOwner
 
 User = get_user_model()
 
