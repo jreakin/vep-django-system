@@ -28,11 +28,9 @@ class OwnerAccountView(generics.RetrieveUpdateAPIView):
     """Owner account details view."""
     
     serializer_class = OwnerAccountSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_object(self):
-        if self.request.user.role != 'owner':
-            raise permissions.PermissionDenied("Only owners can access this resource")
         account, created = OwnerAccount.objects.get_or_create(user=self.request.user)
         return account
 
