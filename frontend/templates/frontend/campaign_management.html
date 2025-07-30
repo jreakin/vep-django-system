@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Campaign Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Campaign Manager</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">Welcome, {{ user.username }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" style="display: none;" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="loading-message mt-2">Loading...</p>
+        </div>
+
+        <!-- Dashboard Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>Campaign Dashboard</h2>
+                <p class="text-muted">Manage your political campaigns and audiences</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button id="create-campaign-btn" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> New Campaign
+                </button>
+                <button id="create-audience-btn" class="btn btn-outline-primary">
+                    <i class="fas fa-users"></i> New Audience
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="campaign-filters" class="row g-3">
+                            <div class="col-md-3">
+                                <select name="status_filter" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="running">Running</option>
+                                    <option value="paused">Paused</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="type_filter" class="form-select">
+                                    <option value="">All Types</option>
+                                    <option value="awareness">Awareness</option>
+                                    <option value="persuasion">Persuasion</option>
+                                    <option value="gotv">Get Out The Vote</option>
+                                    <option value="fundraising">Fundraising</option>
+                                    <option value="volunteer_recruitment">Volunteer Recruitment</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="refresh-campaigns-btn" type="button" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaigns Grid -->
+        <div class="row">
+            <div class="col-md-9">
+                <h4>Campaigns</h4>
+                <div class="row" id="campaigns-list">
+                    <!-- Campaigns will be loaded here -->
+                </div>
+            </div>
+            <div class="col-md-3">
+                <h5>Audiences</h5>
+                <div class="list-group" id="audiences-list">
+                    <!-- Audiences will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Modal -->
+    <div class="modal fade" id="campaign-modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="campaign-modal-title">Create New Campaign</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="campaign-form">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="campaign-name" class="form-label">Campaign Name *</label>
+                                    <input type="text" class="form-control" name="name" id="campaign-name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="campaign-type" class="form-label">Campaign Type *</label>
+                                    <select class="form-select" name="campaign_type" id="campaign-type" required>
+                                        <option value="">Select type...</option>
+                                        <option value="awareness">Awareness</option>
+                                        <option value="persuasion">Persuasion</option>
+                                        <option value="gotv">Get Out The Vote</option>
+                                        <option value="fundraising">Fundraising</option>
+                                        <option value="volunteer_recruitment">Volunteer Recruitment</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="campaign-audience" class="form-label">Target Audience *</label>
+                                    <select class="form-select" name="audience" id="campaign-audience" required>
+                                        <option value="">Select audience...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="campaign-budget" class="form-label">Budget ($)</label>
+                                    <input type="number" class="form-control" name="budget" id="campaign-budget" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaign-message" class="form-label">Message Template *</label>
+                            <textarea class="form-control" name="message_template" id="campaign-message" rows="4" required 
+                                      placeholder="Enter your campaign message template..."></textarea>
+                            <div class="form-text">Use variables like {first_name}, {last_name}, etc. for personalization</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaign-schedule" class="form-label">Schedule Send (Optional)</label>
+                            <input type="datetime-local" class="form-control" name="scheduled_send" id="campaign-schedule">
+                            <div class="form-text">Leave empty to send immediately when started</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Campaign</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audience Modal -->
+    <div class="modal fade" id="audience-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="audience-modal-title">Create New Audience</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="audience-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="audience-name" class="form-label">Audience Name *</label>
+                            <input type="text" class="form-control" name="name" id="audience-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="audience-platform" class="form-label">Platform *</label>
+                            <select class="form-select" name="platform" id="audience-platform" required>
+                                <option value="">Select platform...</option>
+                                <option value="email">Email</option>
+                                <option value="sms">SMS</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="twitter">Twitter/X</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="snapchat">Snapchat</option>
+                                <option value="direct_mail">Direct Mail</option>
+                                <option value="phone">Phone</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="audience-filters" class="form-label">Filters (JSON)</label>
+                            <textarea class="form-control" name="filters" id="audience-filters" rows="3" 
+                                      placeholder='{"age_min": 18, "state": "CA", "party": "Democrat"}'></textarea>
+                            <div class="form-text">Enter filtering criteria as JSON</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Audience</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Details Modal -->
+    <div class="modal fade" id="campaign-details-modal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Campaign Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="campaign-details-content">
+                    <!-- Campaign details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+    <script src="{% static 'js/django-political-campaigns.js' %}"></script>
+</body>
+</html>
