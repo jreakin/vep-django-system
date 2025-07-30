@@ -198,8 +198,8 @@ class MultiTierAccessManager:
         if access_level == AccessLevel.COUNTY:
             if (hasattr(user, 'county_account') and 
                 user.county_account.state == target_campaign.state):
-                # Additional logic needed to check if campaign is in their county
-                return True
+                if user.county_account.county == target_campaign.county:
+                    return True
                 
         # Vendor users can access campaigns in states they serve
         if access_level == AccessLevel.VENDOR:
