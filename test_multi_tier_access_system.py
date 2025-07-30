@@ -678,7 +678,7 @@ class TestEdgeCases(MultiTierAccessSystemTest):
             test_view(request)
             
         # Test with user that has is_authenticated = False
-        unauth_user = User()
+        unauth_user = AnonymousUser()
         request.user = unauth_user
         
         with self.assertRaises(PermissionDenied):
