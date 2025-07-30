@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import StateAccount, CountyAccount, CandidateAccount, VendorAccount, VolunteerInvite
+from .models import (
+    OwnerAccount, StateAccount, CountyAccount, CampaignAccount, 
+    VendorAccount, VolunteerInvite
+)
 
 User = get_user_model()
 
@@ -10,32 +13,19 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'is_verified', 'created_at', 'updated_at']
+        fields = ['id', 'phone_number', 'email', 'role', 'is_verified', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    """Serializer for user registration."""
+class OwnerAccountSerializer(serializers.ModelSerializer):
+    """Serializer for OwnerAccount model."""
     
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True)
+    user = UserSerializer(read_only=True)
     
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'password_confirm', 'role']
-    
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError("Passwords do not match")
-        return attrs
-    
-    def create(self, validated_data):
-        validated_data.pop('password_confirm')
-        password = validated_data.pop('password')
-        user = User.objects.create_user(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
+        model = OwnerAccount
+        fields = ['user', 'company_name', 'contact_name', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 
 class StateAccountSerializer(serializers.ModelSerializer):
@@ -60,13 +50,13 @@ class CountyAccountSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
 
-class CandidateAccountSerializer(serializers.ModelSerializer):
-    """Serializer for CandidateAccount model."""
+class CampaignAccountSerializer(serializers.ModelSerializer):
+    """Serializer for CampaignAccount model."""
     
     user = UserSerializer(read_only=True)
     
     class Meta:
-        model = CandidateAccount
+        model = CampaignAccount
         fields = ['user', 'name', 'office_type', 'office_name', 'district_ids', 'state', 
                  'party_affiliation', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
@@ -94,22 +84,3 @@ class VolunteerInviteSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'campaign_id', 'inviter', 'status', 
                  'invited_at', 'responded_at', 'expires_at']
         read_only_fields = ['id', 'inviter', 'invited_at', 'responded_at']
-
-
-class PasswordResetRequestSerializer(serializers.Serializer):
-    """Serializer for password reset request."""
-    
-    email = serializers.EmailField()
-
-
-class PasswordResetConfirmSerializer(serializers.Serializer):
-    """Serializer for password reset confirmation."""
-    
-    token = serializers.CharField()
-    new_password = serializers.CharField(min_length=8)
-    confirm_password = serializers.CharField(min_length=8)
-    
-    def validate(self, attrs):
-        if attrs['new_password'] != attrs['confirm_password']:
-            raise serializers.ValidationError("Passwords do not match")
-        return attrs

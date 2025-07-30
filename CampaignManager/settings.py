@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'users',
+    'authentication',
+    'billing',
     'voter_data',
     'dashboards',
     'integrations',
@@ -179,6 +181,21 @@ SPECTACULAR_SETTINGS = {
 SUPABASE_URL = config('SUPABASE_URL', default='')
 SUPABASE_ANON_KEY = config('SUPABASE_ANON_KEY', default='')
 SUPABASE_SERVICE_KEY = config('SUPABASE_SERVICE_KEY', default='')
+
+# Twilio Configuration for SMS
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
+
+# Stripe Configuration for Payment Processing
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# PIN Authentication Settings
+PIN_EXPIRY_MINUTES = config('PIN_EXPIRY_MINUTES', default=10, cast=int)
+PIN_MAX_ATTEMPTS = config('PIN_MAX_ATTEMPTS', default=3, cast=int)
+SMS_RATE_LIMIT_PER_HOUR = config('SMS_RATE_LIMIT_PER_HOUR', default=5, cast=int)
 
 # External API Configuration
 FULLCONTACT_API_KEY = config('FULLCONTACT_API_KEY', default='')

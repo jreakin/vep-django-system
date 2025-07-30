@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 def home(request):
     """Home page view."""
-    return render(request, 'frontend/home.html')
+    return render(request, 'frontend/index.html')
 
 
 def column_mapping(request):
