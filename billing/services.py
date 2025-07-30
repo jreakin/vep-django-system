@@ -9,8 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Configure Stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
+# Stripe API key will be set per request for security.
 
 
 class BillingService:
