@@ -160,7 +160,7 @@ class AudienceViewSet(viewsets.ModelViewSet):
         
         # This would integrate with your voter data system
         # For now, return a mock estimate
-        estimated_size = 1000  # Replace with actual calculation
+        estimated_size = settings.DEFAULT_ESTIMATED_SIZE  # Configurable default value
         
         audience.estimated_size = estimated_size
         audience.save()
