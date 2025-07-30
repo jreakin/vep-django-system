@@ -41,7 +41,7 @@ class IsCampaign(permissions.BasePermission):
     """
     
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == 'campaign'
+        return request.user and request.user.is_authenticated and request.user.role == Role.CAMPAIGN
 
 
 class IsVendor(permissions.BasePermission):
