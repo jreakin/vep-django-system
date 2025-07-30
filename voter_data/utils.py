@@ -25,7 +25,16 @@ def construct_address_lines(voter: VoterRecord) -> Tuple[str, str]:
         res_address += f", {voter.residence_part_street_suffix}"
     
     # Construct city, state, zip
-    res_city_state_zip = f"{voter.residence_part_city or ''}, {voter.residence_part_state or ''} {voter.residence_part_zip5 or ''}".strip().strip(",")
+    # Extract city, state, and ZIP components
+    res_city = voter.residence_part_city or ""
+    res_state = voter.residence_part_state or ""
+    res_zip = voter.residence_part_zip5 or ""
+    
+    # Combine components into a single string
+    res_city_state_zip = f"{res_city}, {res_state} {res_zip}"
+    
+    # Clean up trailing spaces or commas
+    res_city_state_zip = res_city_state_zip.strip().strip(",")
     
     # Construct mailing address
     mail_address = f"{voter.mail_address1 or ''} {voter.mail_address2 or ''}".strip()
