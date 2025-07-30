@@ -20,7 +20,26 @@ from .serializers import (
 
 class CampaignViewSet(viewsets.ModelViewSet):
     """
-    API ViewSet for Campaign management
+    A ViewSet for managing campaigns in the campaign management system.
+    
+    This ViewSet provides CRUD operations for campaigns and includes custom actions
+    for starting, pausing, and retrieving metrics for campaigns. It enforces
+    authentication via the `IsAuthenticated` permission class.
+    
+    Key Features:
+    - Filters campaigns based on the user's role and permissions.
+    - Uses different serializers for specific actions (e.g., `CampaignCreateSerializer` for creation).
+    - Custom actions:
+        - `start`: Starts a campaign if it is in 'draft' or 'paused' status.
+        - `pause`: Pauses a campaign if it is in 'running' status.
+        - `metrics`: Retrieves performance metrics for a campaign.
+    
+    Permissions:
+    - Only authenticated users can access this ViewSet.
+    
+    Implementation Details:
+    - The `get_queryset` method filters campaigns based on the user's role.
+    - The `perform_create` method associates the created campaign with the current user.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = CampaignSerializer
