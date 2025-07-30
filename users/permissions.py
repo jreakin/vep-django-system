@@ -1,13 +1,20 @@
 from rest_framework import permissions
 
 
+class Role:
+    OWNER = 'owner'
+    STATE = 'state'
+    COUNTY = 'county'
+    CAMPAIGN = 'campaign'
+    VENDOR = 'vendor'
+
 class IsOwner(permissions.BasePermission):
     """
     Custom permission to only allow owners to access owner-specific resources.
     """
     
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == 'owner'
+        return request.user and request.user.is_authenticated and request.user.role == Role.OWNER
 
 
 class IsState(permissions.BasePermission):
