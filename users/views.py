@@ -102,9 +102,11 @@ class AccountListView(generics.ListAPIView):
         
         # Get all users with their account details
         users = User.objects.all().order_by('-created_at')
+        paginator = self.pagination_class()
+        paginated_users = paginator.paginate_queryset(users, request)
         accounts_data = []
         
-        for user in users:
+        for user in paginated_users:
             user_data = UserSerializer(user).data
             account_data = None
             
