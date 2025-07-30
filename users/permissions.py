@@ -50,4 +50,4 @@ class IsVendor(permissions.BasePermission):
     """
     
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == 'vendor'
+        return request.user and request.user.is_authenticated and request.user.role == Role.VENDOR
