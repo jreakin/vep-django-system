@@ -37,7 +37,7 @@ class PoliticalCampaignJSIntegrationTest(TestCase):
 
     def test_campaign_management_view_loads(self):
         """Test that the campaign management view loads successfully"""
-        response = self.client.get('/api/campaigns/')
+        response = self.client.get(reverse('campaign_management'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Campaign Dashboard')
         self.assertContains(response, 'django-political-campaigns.js')
