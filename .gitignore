@@ -205,3 +205,20 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# React/Node.js specific
+frontend/react-app/node_modules/
+frontend/react-app/dist/
+frontend/react-app/.env.local
+frontend/react-app/.env.development.local
+frontend/react-app/.env.test.local
+frontend/react-app/.env.production.local
+frontend/react-app/npm-debug.log*
+frontend/react-app/yarn-debug.log*
+frontend/react-app/yarn-error.log*
+
+# Media files
+media/
+
+# Staticfiles
+staticfiles/
