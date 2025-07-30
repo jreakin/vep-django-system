@@ -44,12 +44,7 @@ class CampaignSerializer(serializers.ModelSerializer):
         """Validate that user has access to the audience"""
         request = self.context.get('request')
         if request and request.user:
-            user = request.user
-            # Check if user owns this audience or is an owner
-            if hasattr(user, 'role') and user.role == 'owner':
-                return value
-            elif value.account != user:
-                raise serializers.ValidationError("You don't have access to this audience")
+            validate_user_access_to_audience(request.user, value)
         return value
 
     def validate_message_template(self, value):
