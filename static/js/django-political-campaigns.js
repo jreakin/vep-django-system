@@ -99,7 +99,7 @@ class PoliticalCampaignManager {
 
     async loadCampaigns() {
         try {
-            const response = await fetch('/api/campaigns/', {
+            const response = await fetch('/api/campaigns/api/campaigns/', {
                 headers: {
                     'Authorization': `Token ${this.getAuthToken()}`,
                     'X-CSRFToken': this.csrfToken
@@ -107,7 +107,9 @@ class PoliticalCampaignManager {
             });
 
             if (response.ok) {
-                this.campaigns = await response.json();
+                const data = await response.json();
+                // Handle DRF paginated response
+                this.campaigns = data.results || data;
                 this.renderCampaigns();
             } else {
                 throw new Error('Failed to fetch campaigns');
@@ -119,7 +121,7 @@ class PoliticalCampaignManager {
 
     async loadAudiences() {
         try {
-            const response = await fetch('/api/audiences/', {
+            const response = await fetch('/api/campaigns/api/audiences/', {
                 headers: {
                     'Authorization': `Token ${this.getAuthToken()}`,
                     'X-CSRFToken': this.csrfToken
@@ -127,7 +129,9 @@ class PoliticalCampaignManager {
             });
 
             if (response.ok) {
-                this.audiences = await response.json();
+                const data = await response.json();
+                // Handle DRF paginated response
+                this.audiences = data.results || data;
                 this.renderAudiences();
                 this.populateAudienceSelectors();
             } else {
@@ -366,7 +370,7 @@ class PoliticalCampaignManager {
         this.showLoading('Saving campaign...');
 
         try {
-            const response = await fetch(url, {
+            const response = await fetch('/api/campaigns/api/campaigns/', {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -410,7 +414,7 @@ class PoliticalCampaignManager {
         this.showLoading('Saving audience...');
 
         try {
-            const response = await fetch('/api/audiences/', {
+            const response = await fetch('/api/campaigns/api/audiences/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -449,7 +453,7 @@ class PoliticalCampaignManager {
         this.showLoading('Starting campaign...');
 
         try {
-            const response = await fetch(`/api/campaigns/${campaignId}/start/`, {
+            const response = await fetch(`/api/campaigns/api/campaigns/${campaignId}/start/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${this.getAuthToken()}`,
@@ -479,7 +483,7 @@ class PoliticalCampaignManager {
         this.showLoading('Pausing campaign...');
 
         try {
-            const response = await fetch(`/api/campaigns/${campaignId}/pause/`, {
+            const response = await fetch(`/api/campaigns/api/campaigns/${campaignId}/pause/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Token ${this.getAuthToken()}`,
@@ -543,7 +547,7 @@ class PoliticalCampaignManager {
         this.showLoading('Loading campaign details...');
 
         try {
-            const response = await fetch(`/api/campaigns/${campaignId}/metrics/`, {
+            const response = await fetch(`/api/campaigns/api/campaigns/${campaignId}/metrics/`, {
                 headers: {
                     'Authorization': `Token ${this.getAuthToken()}`,
                     'X-CSRFToken': this.csrfToken
