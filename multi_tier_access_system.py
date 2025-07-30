@@ -146,8 +146,10 @@ class MultiTierAccessManager:
                 user.campaign_account.state == target_state and
                 user.campaign_account.office_type == 'county'):
                 # For county campaigns, we need to check if they're in the target county
-                # This would require additional logic to map district_ids to counties
-                return True
+                if hasattr(user.campaign_account, 'district_id'):
+                    campaign_county = MultiTierAccessManager.get_county_from_district_id(user.campaign_account.district_id)
+                    if campaign_county == target_county:
+                        return True
                 
         # Vendor users can access counties in states they serve
         if access_level == AccessLevel.VENDOR:
