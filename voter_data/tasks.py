@@ -85,13 +85,16 @@ def batch_verify_addresses(voter_ids):
     
     logger.info(f"Starting batch address verification for {total_count} voters")
     
-    for voter_id in voter_ids:
-        try:
-            if verify_address(voter_id):
-                success_count += 1
-        except Exception as e:
-            logger.error(f"Failed to verify address for voter {voter_id}: {str(e)}")
-            continue
+    from celery import group
+    
+    # Dispatch tasks asynchronously
+    tasks = group(verify_address.s(voter_id) for voter_id in voter_ids)()
+    
+    # Wait for all tasks to complete and collect results
+    results = tasks.get()
+    
+    # Count successful verifications
+    success_count = sum(1 for result in results if result)
     
     logger.info(f"Batch verification completed: {success_count}/{total_count} successful")
     return success_count
