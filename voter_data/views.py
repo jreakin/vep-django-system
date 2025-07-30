@@ -165,7 +165,26 @@ class DataProcessingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """Process and save validated voter data with election metadata."""
+        """
+        Process and save validated voter data with election metadata.
+
+        This method processes voter data using the provided file ID and mappings, 
+        and optionally handles election metadata and address verification.
+
+        Parameters:
+            request (Request): The HTTP request object containing the following data:
+                - file_id (str): The ID of the uploaded file containing voter data. (Required)
+                - mappings (dict): A dictionary mapping column names to data fields. (Required)
+                - elections (list, optional): A list of dictionaries, where each dictionary 
+                  represents election metadata. Each dictionary should match the structure 
+                  expected by the ElectionMetadata class.
+                - auto_verify_addresses (bool, optional): A flag indicating whether to 
+                  automatically verify voter addresses. Defaults to False.
+
+        Returns:
+            Response: A JSON response indicating success or failure, along with any 
+            relevant data or error messages.
+        """
         
         file_id = request.data.get('file_id')
         mappings = request.data.get('mappings')
