@@ -4,6 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 import uuid
 import random
+import secrets
 
 
 class UserManager(BaseUserManager):
