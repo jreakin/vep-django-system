@@ -67,6 +67,9 @@ class FileUploadService:
             raise FileNotFoundError(f"File {file_id} not found")
         
         try:
+            # Import enhanced validation model
+            from validation import ComprehensiveVoterData
+            
             # Read file
             df = self._read_file(temp_path, "temp.csv")
             
@@ -76,13 +79,31 @@ class FileUploadService:
             # Validate each row
             errors = []
             valid_count = 0
+            warnings = []
             
             for index, row in mapped_df.iterrows():
                 try:
-                    # Convert row to dict and validate
+                    # Convert row to dict and handle NaN values
                     row_data = row.to_dict()
-                    VoterData(**row_data)
+                    
+                    # Clean NaN values
+                    for key, value in row_data.items():
+                        if pd.isna(value):
+                            row_data[key] = None
+                        elif isinstance(value, str):
+                            row_data[key] = value.strip() if value.strip() else None
+                    
+                    # Validate with enhanced model
+                    validated_data = ComprehensiveVoterData(**row_data)
                     valid_count += 1
+                    
+                    # Add warnings for missing recommended fields
+                    if not validated_data.voter_vuid and not validated_data.voter_id:
+                        warnings.append({
+                            'row': index + 1,
+                            'message': 'No voter identifier found (voter_vuid or voter_id)'
+                        })
+                    
                 except Exception as e:
                     errors.append({
                         'row': index + 1,
@@ -94,13 +115,13 @@ class FileUploadService:
                 valid_rows=valid_count,
                 invalid_rows=len(errors),
                 errors=errors,
-                warnings=[]
+                warnings=warnings
             )
             
         except Exception as e:
             raise e
     
-    def process_validated_data(self, file_id: str, mappings: Dict[str, str], account_owner_id: str) -> List[Dict[str, Any]]:
+    def process_validated_data(self, file_id: str, mappings: Dict[str, str], account_owner_id: str, elections: List[Dict] = None) -> List[Dict[str, Any]]:
         """Process validated data and return list of voter records ready for database insertion."""
         
         temp_path = self._get_temp_file_path(file_id)
@@ -108,25 +129,66 @@ class FileUploadService:
             raise FileNotFoundError(f"File {file_id} not found")
         
         try:
+            # Import enhanced validation and models
+            from validation import ComprehensiveVoterData
+            from voter_data.utils import construct_address_lines
+            
             # Read and map data
             df = self._read_file(temp_path, "temp.csv")
             mapped_df = df.rename(columns={v: k for k, v in mappings.items()})
             
             validated_records = []
+            election_data_records = []
             
             for index, row in mapped_df.iterrows():
                 try:
+                    # Convert row to dict and handle NaN values
                     row_data = row.to_dict()
                     
-                    # Validate with Pydantic
-                    validated = VoterData(**row_data)
+                    # Clean NaN values
+                    for key, value in row_data.items():
+                        if pd.isna(value):
+                            row_data[key] = None
+                        elif isinstance(value, str):
+                            row_data[key] = value.strip() if value.strip() else None
+                    
+                    # Extract election data columns before validation
+                    election_columns = {}
+                    if elections:
+                        for election in elections:
+                            column = election.get('column')
+                            if column in row_data:
+                                election_columns[election['name']] = {
+                                    'value': row_data.pop(column, ''),
+                                    'data_type': election.get('data_type', 'voted'),
+                                    'election_meta': election
+                                }
+                    
+                    # Validate with enhanced model
+                    validated = ComprehensiveVoterData(**row_data)
                     
                     # Convert to dict for database insertion
                     record = validated.dict()
                     record['account_owner_id'] = account_owner_id
                     record['id'] = str(uuid.uuid4())
                     
+                    # Ensure we have a voter identifier
+                    if not record.get('voter_vuid') and not record.get('voter_id'):
+                        # Generate a temporary ID if none exists
+                        record['voter_vuid'] = f"TEMP_{uuid.uuid4().hex[:8]}"
+                        record['voter_id'] = record['voter_vuid']
+                    
                     validated_records.append(record)
+                    
+                    # Store election data for later processing
+                    for election_name, election_info in election_columns.items():
+                        election_data_records.append({
+                            'voter_id': record.get('voter_vuid') or record.get('voter_id'),
+                            'election_name': election_name,
+                            'data_type': election_info['data_type'],
+                            'value': str(election_info['value']),
+                            'election_meta': election_info['election_meta']
+                        })
                     
                 except Exception:
                     # Skip invalid rows - they should have been caught in validation step
@@ -135,7 +197,10 @@ class FileUploadService:
             # Clean up temp file
             os.remove(temp_path)
             
-            return validated_records
+            return {
+                'voter_records': validated_records,
+                'election_data_records': election_data_records
+            }
             
         except Exception as e:
             raise e
@@ -228,33 +293,44 @@ class FileUploadService:
         return preview_data
     
     def _suggest_mappings(self, columns: List[str]) -> Dict[str, str]:
-        """Suggest column mappings based on column names."""
+        """Suggest column mappings based on column names using comprehensive field mappings."""
         
-        # Define mapping patterns
-        mapping_patterns = {
-            'voter_id': [r'voter.*id', r'id', r'.*id.*', r'registration.*id'],
-            'name': [r'name', r'full.*name', r'voter.*name'],
-            'first_name': [r'first.*name', r'fname', r'given.*name'],
-            'last_name': [r'last.*name', r'lname', r'surname', r'family.*name'],
-            'address': [r'address', r'street', r'addr', r'residence'],
-            'city': [r'city', r'municipality'],
-            'state': [r'state', r'st'],
-            'zip_code': [r'zip', r'postal', r'zip.*code'],
-            'email': [r'email', r'e.*mail'],
-            'phone': [r'phone', r'tel', r'mobile', r'cell'],
-            'date_of_birth': [r'birth', r'dob', r'born'],
-            'party_affiliation': [r'party', r'affiliation', r'political'],
-        }
+        # Import field mappings from utils
+        from voter_data.utils import get_field_mappings
+        
+        mapping_patterns = get_field_mappings()
         
         suggestions = {}
         used_columns = set()
         
-        for field, patterns in mapping_patterns.items():
+        # First pass: exact matches (case insensitive)
+        for field, aliases in mapping_patterns.items():
             for column in columns:
                 if column.lower() in used_columns:
                     continue
                 
-                for pattern in patterns:
+                # Check for exact match (case insensitive)
+                if column.upper() in [alias.upper() for alias in aliases]:
+                    suggestions[field] = column
+                    used_columns.add(column.lower())
+                    break
+        
+        # Second pass: partial matches for remaining columns
+        import re
+        for field, aliases in mapping_patterns.items():
+            if field in suggestions:
+                continue  # Already found exact match
+                
+            for column in columns:
+                if column.lower() in used_columns:
+                    continue
+                
+                # Create regex patterns from aliases
+                for alias in aliases:
+                    # Clean alias for regex
+                    pattern = re.escape(alias.lower()).replace(r'\ ', r'[_\s]?')
+                    pattern = pattern.replace(r'\+', r'\+?')  # Make + optional
+                    
                     if re.search(pattern, column.lower()):
                         suggestions[field] = column
                         used_columns.add(column.lower())
