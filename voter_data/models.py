@@ -173,59 +173,52 @@ class VoterRecord(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        """Override save to sync between legacy and new fields."""
+        """Override save to sync between legacy and new fields only when necessary."""
+        updated_fields = set(kwargs.get('update_fields', []))
+        
         # Sync legacy fields with new fields
-        if self.voter_vuid and not self.voter_id:
-            self.voter_id = self.voter_vuid
-        elif self.voter_id and not self.voter_vuid:
-            self.voter_vuid = self.voter_id
-            
+        if 'voter_vuid' in updated_fields or 'voter_id' in updated_fields:
+            if self.voter_vuid and not self.voter_id:
+                self.voter_id = self.voter_vuid
+            elif self.voter_id and not self.voter_vuid:
+                self.voter_vuid = self.voter_id
+        
         # Sync name fields
-        if self.person_name_first or self.person_name_last:
+        if 'person_name_first' in updated_fields or 'person_name_last' in updated_fields:
             self.first_name = self.person_name_first or self.first_name
             self.last_name = self.person_name_last or self.last_name
             self.name = f"{self.person_name_first or ''} {self.person_name_last or ''}".strip()
-        elif self.first_name or self.last_name:
-            self.person_name_first = self.first_name or self.person_name_first
-            self.person_name_last = self.last_name or self.person_name_last
-            
+        
         # Sync address fields
-        if self.residence_part_city and not self.city:
-            self.city = self.residence_part_city
-        elif self.city and not self.residence_part_city:
+        if 'residence_part_city' in updated_fields or 'city' in updated_fields:
+            self.city = self.residence_part_city or self.city
             self.residence_part_city = self.city
-            
-        if self.residence_part_state and not self.state:
-            self.state = self.residence_part_state
-        elif self.state and not self.residence_part_state:
+        
+        if 'residence_part_state' in updated_fields or 'state' in updated_fields:
+            self.state = self.residence_part_state or self.state
             self.residence_part_state = self.state
-            
-        if self.residence_part_zip5 and not self.zip_code:
-            self.zip_code = self.residence_part_zip5
-        elif self.zip_code and not self.residence_part_zip5:
+        
+        if 'residence_part_zip5' in updated_fields or 'zip_code' in updated_fields:
+            self.zip_code = self.residence_part_zip5 or self.zip_code
             self.residence_part_zip5 = self.zip_code
-            
+        
         # Sync other fields
-        if self.person_dob and not self.date_of_birth:
-            self.date_of_birth = self.person_dob
-        elif self.date_of_birth and not self.person_dob:
+        if 'person_dob' in updated_fields or 'date_of_birth' in updated_fields:
+            self.date_of_birth = self.person_dob or self.date_of_birth
             self.person_dob = self.date_of_birth
-            
-        if self.voter_political_party and not self.party_affiliation:
-            self.party_affiliation = self.voter_political_party
-        elif self.party_affiliation and not self.voter_political_party:
+        
+        if 'voter_political_party' in updated_fields or 'party_affiliation' in updated_fields:
+            self.party_affiliation = self.voter_political_party or self.party_affiliation
             self.voter_political_party = self.party_affiliation
-            
-        if self.contact_phone_unknown1 and not self.phone:
-            self.phone = self.contact_phone_unknown1
-        elif self.phone and not self.contact_phone_unknown1:
+        
+        if 'contact_phone_unknown1' in updated_fields or 'phone' in updated_fields:
+            self.phone = self.contact_phone_unknown1 or self.phone
             self.contact_phone_unknown1 = self.phone
-            
-        if self.residential_address and not self.address:
-            self.address = self.residential_address
-        elif self.address and not self.residential_address:
+        
+        if 'residential_address' in updated_fields or 'address' in updated_fields:
+            self.address = self.residential_address or self.address
             self.residential_address = self.address
-            
+        
         super().save(*args, **kwargs)
 
     def __str__(self):
