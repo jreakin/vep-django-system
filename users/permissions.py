@@ -23,7 +23,7 @@ class IsState(permissions.BasePermission):
     """
     
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and request.user.role == 'state'
+        return request.user and request.user.is_authenticated and request.user.role == Role.STATE
 
 
 class IsCounty(permissions.BasePermission):
