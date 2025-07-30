@@ -20,7 +20,10 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied as DRFPermissionDenied
-from users.permissions import Role
+class Role:
+    """Constants for user roles."""
+    VENDOR = 'vendor'
+    # Add other roles here if needed
 
 
 class AccessLevel:
