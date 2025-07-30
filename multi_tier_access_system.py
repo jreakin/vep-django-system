@@ -479,13 +479,16 @@ def get_accessible_states(user):
     access_level = MultiTierAccessManager.get_user_access_level(user)
     
     if access_level == AccessLevel.OWNER:
-        # Owners can access all states - would need to query all states from data
-        # For now, return a common set
-        from users.models import StateAccount, CountyAccount, CampaignAccount
-        states = set()
-        states.update(StateAccount.objects.values_list('state', flat=True))
-        states.update(CountyAccount.objects.values_list('state', flat=True))
-        states.update(CampaignAccount.objects.values_list('state', flat=True))
+        # Owners can access all states - cache the result to improve performance
+        from django.core.cache import cache
+        cache_key = f"accessible_states_owner"
+        states = cache.get(cache_key)
+        if states is None:
+            states = set()
+            states.update(StateAccount.objects.values_list('state', flat=True))
+            states.update(CountyAccount.objects.values_list('state', flat=True))
+            states.update(CampaignAccount.objects.values_list('state', flat=True))
+            cache.set(cache_key, list(states), timeout=3600)  # Cache for 1 hour
         return list(states)
         
     elif access_level == AccessLevel.STATE:
