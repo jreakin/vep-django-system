@@ -364,7 +364,7 @@ class PoliticalCampaignManager {
         };
 
         const isEdit = this.currentCampaign !== null;
-        const url = isEdit ? `/api/campaigns/${this.currentCampaign}/` : '/api/campaigns/';
+        const url = isEdit ? `/api/campaigns/api/campaigns/${this.currentCampaign}/` : '/api/campaigns/api/campaigns/';
         const method = isEdit ? 'PUT' : 'POST';
 
         this.showLoading('Saving campaign...');
