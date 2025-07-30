@@ -3,14 +3,19 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.db import models
 from drf_spectacular.utils import extend_schema
 from .models import VoterRecord, Election, ElectionData, EarlyVoteRecord, VoterEngagement
 from .serializers import (
     VoterRecordSerializer, ElectionSerializer, ElectionDataSerializer,
     EarlyVoteRecordSerializer, VoterEngagementSerializer, FileUploadSerializer,
-    ColumnMappingSerializer
+    ColumnMappingSerializer, EnhancedVoterRecordSerializer
 )
+from .utils import update_addresses, validate_office_type, get_valid_office_types_for_district
+from .tasks import verify_address, batch_verify_addresses, update_address_from_components
 from services import FileUploadService, GeocodingService, DataEnrichmentService
+from validation import ElectionMetadata
+import json
 
 
 class VoterRecordListCreateView(generics.ListCreateAPIView):
@@ -104,7 +109,7 @@ class FileUploadView(APIView):
 
 
 class ColumnMappingView(APIView):
-    """Handle column mapping confirmation and data validation."""
+    """Handle column mapping confirmation, data validation, and election metadata."""
     
     permission_classes = [permissions.IsAuthenticated]
 
@@ -113,7 +118,7 @@ class ColumnMappingView(APIView):
         responses={200: {'type': 'object'}}
     )
     def post(self, request):
-        """Validate data with confirmed column mappings."""
+        """Validate data with confirmed column mappings and election metadata."""
         
         serializer = ColumnMappingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -122,6 +127,20 @@ class ColumnMappingView(APIView):
         mappings = serializer.validated_data['mappings']
         data_type = serializer.validated_data['data_type']
         
+        # Extract election metadata if provided
+        elections_data = request.data.get('elections', [])
+        elections = []
+        
+        for election_data in elections_data:
+            try:
+                election = ElectionMetadata(**election_data)
+                elections.append(election.dict())
+            except Exception as e:
+                return Response({
+                    'success': False,
+                    'message': f'Invalid election metadata: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             upload_service = FileUploadService()
             validation_result = upload_service.validate_with_mappings(file_id, mappings)
@@ -129,7 +148,8 @@ class ColumnMappingView(APIView):
             return Response({
                 'success': True,
                 'message': 'Data validated successfully',
-                'data': validation_result.dict()
+                'data': validation_result.dict(),
+                'elections': elections
             })
             
         except Exception as e:
@@ -140,15 +160,17 @@ class ColumnMappingView(APIView):
 
 
 class DataProcessingView(APIView):
-    """Process validated data and save to database."""
+    """Process validated data and save to database with enhanced address handling."""
     
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """Process and save validated voter data."""
+        """Process and save validated voter data with election metadata."""
         
         file_id = request.data.get('file_id')
         mappings = request.data.get('mappings')
+        elections_data = request.data.get('elections', [])
+        auto_verify_addresses = request.data.get('auto_verify_addresses', False)
         
         if not file_id or not mappings:
             return Response({
@@ -158,52 +180,97 @@ class DataProcessingView(APIView):
         
         try:
             upload_service = FileUploadService()
-            geocoding_service = GeocodingService()
-            enrichment_service = DataEnrichmentService()
+            
+            # Validate election metadata
+            elections = []
+            for election_data in elections_data:
+                try:
+                    election = ElectionMetadata(**election_data)
+                    elections.append(election.dict())
+                except Exception as e:
+                    return Response({
+                        'success': False,
+                        'message': f'Invalid election metadata: {str(e)}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             # Process validated data
-            validated_records = upload_service.process_validated_data(
-                file_id, mappings, str(request.user.id)
+            processed_data = upload_service.process_validated_data(
+                file_id, mappings, str(request.user.id), elections
             )
+            
+            voter_records = processed_data['voter_records']
+            election_data_records = processed_data['election_data_records']
             
             saved_count = 0
             error_count = 0
+            election_saved_count = 0
+            voter_ids_for_verification = []
             
-            for record_data in validated_records:
+            # Process voter records
+            for record_data in voter_records:
                 try:
-                    # Geocode address if coordinates not provided
-                    if not record_data.get('latitude') or not record_data.get('longitude'):
-                        coords = geocoding_service.geocode_address(record_data['address'])
-                        if coords:
-                            record_data['latitude'], record_data['longitude'] = coords
-                    
-                    # Enrich with social media data
-                    if record_data.get('email'):
-                        social_data = enrichment_service.enrich_social_media(record_data['email'])
-                        record_data['social_media'].update(social_data)
-                    
-                    # Enrich with employment data
-                    if record_data.get('name') and record_data.get('email'):
-                        employment_data = enrichment_service.enrich_employment(
-                            record_data['name'], record_data['email']
-                        )
-                        record_data['employment'].update(employment_data)
-                    
-                    # Save to database
+                    # Create VoterRecord instance
                     voter_record = VoterRecord.objects.create(**record_data)
                     saved_count += 1
+                    voter_ids_for_verification.append(str(voter_record.id))
+                    
+                    # Update constructed addresses
+                    update_addresses(voter_record)
                     
                 except Exception as e:
                     error_count += 1
                     continue
             
+            # Process election data
+            for election_record in election_data_records:
+                try:
+                    # Get or create election
+                    election_meta = election_record['election_meta']
+                    election, created = Election.objects.get_or_create(
+                        name=election_record['election_name'],
+                        defaults={
+                            'election_type': election_meta.get('election_type'),
+                            'year': election_meta.get('year'),
+                            'date': election_meta.get('date')
+                        }
+                    )
+                    
+                    # Find voter by ID
+                    voter = VoterRecord.objects.filter(
+                        models.Q(voter_vuid=election_record['voter_id']) |
+                        models.Q(voter_id=election_record['voter_id'])
+                    ).first()
+                    
+                    if voter:
+                        # Create or update election data
+                        election_data, created = ElectionData.objects.get_or_create(
+                            voter=voter,
+                            election=election,
+                            data_type=election_record['data_type'],
+                            defaults={'value': election_record['value']}
+                        )
+                        if not created:
+                            election_data.value = election_record['value']
+                            election_data.save()
+                        
+                        election_saved_count += 1
+                        
+                except Exception as e:
+                    continue
+            
+            # Queue address verification if requested
+            if auto_verify_addresses and voter_ids_for_verification:
+                batch_verify_addresses.delay(voter_ids_for_verification)
+            
             return Response({
                 'success': True,
-                'message': f'Data processed successfully. {saved_count} records saved, {error_count} errors.',
+                'message': f'Data processed successfully. {saved_count} voter records saved, {election_saved_count} election data records saved, {error_count} errors.',
                 'data': {
-                    'saved_count': saved_count,
+                    'voter_saved_count': saved_count,
+                    'election_saved_count': election_saved_count,
                     'error_count': error_count,
-                    'total_processed': len(validated_records)
+                    'total_processed': len(voter_records),
+                    'address_verification_queued': auto_verify_addresses
                 }
             })
             
@@ -225,3 +292,160 @@ class VoterEngagementListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(engaged_by=self.request.user)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def verify_voter_address(request, voter_id):
+    """Trigger address verification for a specific voter."""
+    
+    try:
+        voter = get_object_or_404(VoterRecord, id=voter_id, account_owner=request.user)
+        
+        # Queue address verification task
+        task = verify_address.delay(str(voter.id))
+        
+        return Response({
+            'success': True,
+            'message': 'Address verification queued',
+            'task_id': task.id
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def batch_verify_voter_addresses(request):
+    """Trigger batch address verification for multiple voters."""
+    
+    voter_ids = request.data.get('voter_ids', [])
+    
+    if not voter_ids:
+        return Response({
+            'success': False,
+            'message': 'voter_ids list is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Verify user owns these voters
+        owned_voters = VoterRecord.objects.filter(
+            id__in=voter_ids,
+            account_owner=request.user
+        ).values_list('id', flat=True)
+        
+        owned_voter_ids = [str(vid) for vid in owned_voters]
+        
+        if len(owned_voter_ids) != len(voter_ids):
+            return Response({
+                'success': False,
+                'message': 'Some voter IDs are not owned by the current user'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Queue batch verification
+        task = batch_verify_addresses.delay(owned_voter_ids)
+        
+        return Response({
+            'success': True,
+            'message': f'Batch address verification queued for {len(owned_voter_ids)} voters',
+            'task_id': task.id,
+            'voter_count': len(owned_voter_ids)
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_office_types(request):
+    """Get valid office types for a given district level."""
+    
+    district_level = request.GET.get('district_level')
+    
+    if not district_level:
+        return Response({
+            'success': False,
+            'message': 'district_level parameter is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        office_types = get_valid_office_types_for_district(district_level)
+        
+        return Response({
+            'success': True,
+            'data': {
+                'district_level': district_level,
+                'office_types': office_types
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def validate_district_office_type(request):
+    """Validate if an office type is valid for a given district level."""
+    
+    district_level = request.data.get('district_level')
+    office_type = request.data.get('office_type')
+    
+    if not district_level or not office_type:
+        return Response({
+            'success': False,
+            'message': 'district_level and office_type are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        is_valid = validate_office_type(district_level, office_type)
+        
+        return Response({
+            'success': True,
+            'data': {
+                'district_level': district_level,
+                'office_type': office_type,
+                'is_valid': is_valid
+            }
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def update_voter_addresses(request, voter_id):
+    """Update voter address fields from components."""
+    
+    try:
+        voter = get_object_or_404(VoterRecord, id=voter_id, account_owner=request.user)
+        
+        # Queue address update task
+        task = update_address_from_components.delay(str(voter.id))
+        
+        return Response({
+            'success': True,
+            'message': 'Address update queued',
+            'task_id': task.id
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
