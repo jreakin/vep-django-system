@@ -1,35 +1,84 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 import uuid
+import random
 
 
 class User(AbstractUser):
-    """Custom user model with role-based authentication."""
+    """Custom user model with phone-based authentication."""
     
     ROLE_CHOICES = [
-        ('state', 'State'),
-        ('county', 'County'),
-        ('candidate', 'Candidate'),
+        ('owner', 'Owner'),
+        ('state', 'State Party'),
+        ('county', 'County Party'),
+        ('campaign', 'Campaign'),
         ('vendor', 'Vendor'),
-        ('volunteer', 'Volunteer'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(blank=True, null=True)  # Optional for some users
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'role']
+    # Remove default username requirement
+    username = None
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['role']
 
     def __str__(self):
-        return f"{self.email} ({self.get_role_display()})"
+        return f"{self.phone_number} ({self.get_role_display()})"
+
+
+class AuthPIN(models.Model):
+    """PIN-based authentication model."""
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auth_pins')
+    pin = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def save(self, *args, **kwargs):
+        if not self.pin:
+            self.pin = str(random.randint(100000, 999999))
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)  # PIN expires in 10 minutes
+        super().save(*args, **kwargs)
+    
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        return not self.is_used and not self.is_expired() and self.attempts < 3
+    
+    def __str__(self):
+        return f"PIN for {self.user.phone_number} - {self.pin}"
+
+
+class OwnerAccount(models.Model):
+    """Owner-level account details with full system access."""
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='owner_account')
+    company_name = models.CharField(max_length=100)
+    contact_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Owner: {self.company_name} - {self.contact_name}"
 
 
 class StateAccount(models.Model):
-    """State-level account details."""
+    """State party account details."""
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='state_account')
     name = models.CharField(max_length=100)
@@ -43,7 +92,7 @@ class StateAccount(models.Model):
 
 
 class CountyAccount(models.Model):
-    """County-level account details."""
+    """County party account details."""
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='county_account')
     name = models.CharField(max_length=100)
@@ -57,8 +106,8 @@ class CountyAccount(models.Model):
         return f"{self.name} - {self.county}, {self.state}"
 
 
-class CandidateAccount(models.Model):
-    """Candidate account details."""
+class CampaignAccount(models.Model):
+    """Campaign account details."""
     
     OFFICE_TYPE_CHOICES = [
         ('federal', 'Federal'),
@@ -67,7 +116,7 @@ class CandidateAccount(models.Model):
         ('local', 'Local'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='candidate_account')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='campaign_account')
     name = models.CharField(max_length=100)
     office_type = models.CharField(max_length=20, choices=OFFICE_TYPE_CHOICES)
     office_name = models.CharField(max_length=100)
@@ -95,6 +144,65 @@ class VendorAccount(models.Model):
 
     def __str__(self):
         return f"{self.company_name} - {self.contact_name}"
+
+
+class Invoice(models.Model):
+    """Billing invoice model."""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('overdue', 'Overdue'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    BILLING_CYCLE_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('annual', 'Annual'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='invoices')
+    period_start = models.DateField()
+    period_end = models.DateField()
+    billing_cycle = models.CharField(max_length=10, choices=BILLING_CYCLE_CHOICES)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2)
+    platform_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    service_fees = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    due_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Invoice {self.id} - {self.user.phone_number} - ${self.amount_due}"
+
+
+class Payment(models.Model):
+    """Payment tracking model."""
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='payments')
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=100, blank=True)
+    failure_reason = models.TextField(blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.id} - {self.amount} - {self.status}"
 
 
 class VolunteerInvite(models.Model):

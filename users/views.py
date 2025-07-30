@@ -1,140 +1,17 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, permissions
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from .models import StateAccount, CountyAccount, CandidateAccount, VendorAccount, VolunteerInvite
+from django.contrib.auth import get_user_model
+from .models import (
+    OwnerAccount, StateAccount, CountyAccount, CampaignAccount, 
+    VendorAccount, VolunteerInvite
+)
 from .serializers import (
-    UserSerializer, UserRegistrationSerializer, StateAccountSerializer,
-    CountyAccountSerializer, CandidateAccountSerializer, VendorAccountSerializer,
-    VolunteerInviteSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+    UserSerializer, OwnerAccountSerializer, StateAccountSerializer,
+    CountyAccountSerializer, CampaignAccountSerializer, VendorAccountSerializer,
+    VolunteerInviteSerializer
 )
 
 User = get_user_model()
-
-
-class UserRegistrationView(generics.CreateAPIView):
-    """User registration endpoint."""
-    
-    queryset = User.objects.all()
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        
-        # Create auth token
-        token, created = Token.objects.get_or_create(user=user)
-        
-        return Response({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-            'message': 'User registered successfully'
-        }, status=status.HTTP_201_CREATED)
-
-
-@extend_schema(
-    request=None,
-    responses={200: {'type': 'object', 'properties': {
-        'user': UserSerializer,
-        'token': {'type': 'string'},
-        'message': {'type': 'string'}
-    }}}
-)
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def login_view(request):
-    """User login endpoint."""
-    
-    email = request.data.get('email')
-    password = request.data.get('password')
-    
-    if not email or not password:
-        return Response({
-            'error': 'Email and password are required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    user = authenticate(request, username=email, password=password)
-    
-    if user:
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'user': UserSerializer(user).data,
-            'token': token.key,
-            'message': 'Login successful'
-        })
-    else:
-        return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-
-@extend_schema(
-    request=None,
-    responses={200: {'type': 'object', 'properties': {
-        'message': {'type': 'string'}
-    }}}
-)
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def logout_view(request):
-    """User logout endpoint."""
-    
-    try:
-        # Delete the user's token
-        request.user.auth_token.delete()
-        return Response({
-            'message': 'Logout successful'
-        })
-    except Token.DoesNotExist:
-        return Response({
-            'message': 'Already logged out'
-        })
-
-
-@extend_schema(
-    request=PasswordResetRequestSerializer,
-    responses={200: {'type': 'object', 'properties': {
-        'message': {'type': 'string'}
-    }}}
-)
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def password_reset_request(request):
-    """Request password reset."""
-    
-    serializer = PasswordResetRequestSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    
-    email = serializer.validated_data['email']
-    
-    try:
-        user = User.objects.get(email=email)
-        
-        # Generate password reset token
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
-        # In a real implementation, send email with reset link
-        # For now, just return the token for testing
-        
-        return Response({
-            'message': 'Password reset email sent',
-            'token': token,  # Remove this in production
-            'uid': uid      # Remove this in production
-        })
-        
-    except User.DoesNotExist:
-        # Don't reveal whether user exists for security
-        return Response({
-            'message': 'Password reset email sent'
-        })
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -147,6 +24,19 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+class OwnerAccountView(generics.RetrieveUpdateAPIView):
+    """Owner account details view."""
+    
+    serializer_class = OwnerAccountSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        if self.request.user.role != 'owner':
+            raise permissions.PermissionDenied("Only owners can access this resource")
+        account, created = OwnerAccount.objects.get_or_create(user=self.request.user)
+        return account
+
+
 class StateAccountView(generics.RetrieveUpdateAPIView):
     """State account details view."""
     
@@ -154,6 +44,8 @@ class StateAccountView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'state':
+            raise permissions.PermissionDenied("Only state parties can access this resource")
         account, created = StateAccount.objects.get_or_create(user=self.request.user)
         return account
 
@@ -165,18 +57,22 @@ class CountyAccountView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'county':
+            raise permissions.PermissionDenied("Only county parties can access this resource")
         account, created = CountyAccount.objects.get_or_create(user=self.request.user)
         return account
 
 
-class CandidateAccountView(generics.RetrieveUpdateAPIView):
-    """Candidate account details view."""
+class CampaignAccountView(generics.RetrieveUpdateAPIView):
+    """Campaign account details view."""
     
-    serializer_class = CandidateAccountSerializer
+    serializer_class = CampaignAccountSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        account, created = CandidateAccount.objects.get_or_create(user=self.request.user)
+        if self.request.user.role != 'campaign':
+            raise permissions.PermissionDenied("Only campaigns can access this resource")
+        account, created = CampaignAccount.objects.get_or_create(user=self.request.user)
         return account
 
 
@@ -187,8 +83,51 @@ class VendorAccountView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'vendor':
+            raise permissions.PermissionDenied("Only vendors can access this resource")
         account, created = VendorAccount.objects.get_or_create(user=self.request.user)
         return account
+
+
+class AccountListView(generics.ListAPIView):
+    """List all accounts - Owner only."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        # This won't be used since we override list method
+        return UserSerializer
+    
+    def list(self, request, *args, **kwargs):
+        if request.user.role != 'owner':
+            raise permissions.PermissionDenied("Only owners can access this resource")
+        
+        # Get all users with their account details
+        users = User.objects.all().order_by('-created_at')
+        accounts_data = []
+        
+        for user in users:
+            user_data = UserSerializer(user).data
+            account_data = None
+            
+            # Get account details based on role
+            if user.role == 'owner' and hasattr(user, 'owner_account'):
+                account_data = OwnerAccountSerializer(user.owner_account).data
+            elif user.role == 'state' and hasattr(user, 'state_account'):
+                account_data = StateAccountSerializer(user.state_account).data
+            elif user.role == 'county' and hasattr(user, 'county_account'):
+                account_data = CountyAccountSerializer(user.county_account).data
+            elif user.role == 'campaign' and hasattr(user, 'campaign_account'):
+                account_data = CampaignAccountSerializer(user.campaign_account).data
+            elif user.role == 'vendor' and hasattr(user, 'vendor_account'):
+                account_data = VendorAccountSerializer(user.vendor_account).data
+            
+            accounts_data.append({
+                'user': user_data,
+                'account': account_data
+            })
+        
+        return Response(accounts_data)
 
 
 class VolunteerInviteListCreateView(generics.ListCreateAPIView):

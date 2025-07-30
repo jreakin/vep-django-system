@@ -4,19 +4,17 @@ from . import views
 app_name = 'users'
 
 urlpatterns = [
-    # Authentication
-    path('register/', views.UserRegistrationView.as_view(), name='register'),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    path('password-reset/', views.password_reset_request, name='password_reset'),
-    
     # User profile
     path('profile/', views.UserProfileView.as_view(), name='profile'),
     
+    # Account management (Owner can view all)
+    path('accounts/', views.AccountListView.as_view(), name='account_list'),
+    
     # Account details by role
+    path('account/owner/', views.OwnerAccountView.as_view(), name='owner_account'),
     path('account/state/', views.StateAccountView.as_view(), name='state_account'),
     path('account/county/', views.CountyAccountView.as_view(), name='county_account'),
-    path('account/candidate/', views.CandidateAccountView.as_view(), name='candidate_account'),
+    path('account/campaign/', views.CampaignAccountView.as_view(), name='campaign_account'),
     path('account/vendor/', views.VendorAccountView.as_view(), name='vendor_account'),
     
     # Volunteer invites
