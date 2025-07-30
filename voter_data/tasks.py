@@ -21,7 +21,7 @@ def verify_address(voter_id):
         return False
 
     # Initialize geocoder
-    geolocator = Nominatim(user_agent="campaign_management")
+    geolocator = Nominatim(user_agent="campaign_management/1.0 (contact: support@campaignmanagement.com)")
     
     # Get address to verify - prefer mailing address, fallback to residential
     address_to_verify = voter.mailing_address or voter.residential_address
