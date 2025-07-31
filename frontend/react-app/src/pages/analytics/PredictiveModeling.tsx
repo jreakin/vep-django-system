@@ -49,7 +49,7 @@ import {
   Download,
   TrendingUp,
   Assessment,
-  PredictiveText,
+  Timeline,
   ModelTraining,
   Psychology,
   ExpandMore,
@@ -58,7 +58,6 @@ import {
   Refresh,
   Settings,
   DataUsage,
-  Timeline,
   BarChart,
   ShowChart,
   ScatterPlot
@@ -493,7 +492,7 @@ const PredictiveModeling: React.FC = () => {
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PredictiveText color="info" sx={{ mr: 2 }} />
+                  <Timeline color="info" sx={{ mr: 2 }} />
                   <Box>
                     <Typography variant="h4">{metrics.total_predictions.toLocaleString()}</Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -525,7 +524,7 @@ const PredictiveModeling: React.FC = () => {
 
       <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
         <Tab label="Models" icon={<ModelTraining />} />
-        <Tab label="Predictions" icon={<PredictiveText />} />
+        <Tab label="Predictions" icon={<Timeline />} />
         <Tab label="Analytics" icon={<BarChart />} />
       </Tabs>
 
@@ -619,7 +618,7 @@ const PredictiveModeling: React.FC = () => {
                               }}
                               disabled={model.status !== 'ready'}
                             >
-                              <PredictiveText />
+                              <Timeline />
                             </IconButton>
                             <IconButton
                               size="small"
@@ -735,7 +734,7 @@ const PredictiveModeling: React.FC = () => {
               <Typography variant="h6">Recent Predictions</Typography>
               <Button
                 variant="contained"
-                startIcon={<PredictiveText />}
+                startIcon={<Timeline />}
                 onClick={() => setPredictDialog(true)}
                 disabled={!selectedModel || selectedModel.status !== 'ready'}
               >
@@ -976,7 +975,7 @@ const PredictiveModeling: React.FC = () => {
             onClick={handleMakePrediction} 
             variant="contained"
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={16} /> : <PredictiveText />}
+            startIcon={loading ? <CircularProgress size={16} /> : <Timeline />}
           >
             Predict
           </Button>
