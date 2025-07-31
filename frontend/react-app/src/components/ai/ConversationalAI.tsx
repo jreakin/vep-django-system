@@ -200,7 +200,7 @@ const ConversationalAI: React.FC<ConversationalAIProps> = ({
           }
           
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          const errorMessage = (error as Error)?.message || 'Unknown error'
           setMessages(prev => prev.map(msg => 
             msg.id === aiMessage.id 
               ? { 

@@ -1,4 +1,10 @@
 // React Three Fiber global types
+import { extend } from '@react-three/fiber'
+import * as THREE from 'three'
+
+// Extend fiber with Three.js objects
+extend(THREE)
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {

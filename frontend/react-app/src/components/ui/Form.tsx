@@ -151,7 +151,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             {label}
           </motion.label>
         )}
-        <motion.textarea
+        <textarea
           className={`tw-flex tw-min-h-24 tw-w-full tw-rounded-lg tw-border tw-bg-background tw-px-4 tw-py-3 tw-text-sm tw-text-text-primary tw-transition-all tw-duration-200 placeholder:tw-text-text-muted focus-visible:tw-outline-none focus-visible:tw-ring-2 focus-visible:tw-ring-primary focus-visible:tw-ring-offset-2 disabled:tw-cursor-not-allowed disabled:tw-opacity-50 tw-resize-none ${
             error 
               ? 'tw-border-error focus-visible:tw-ring-error' 
