@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db import models
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from drf_spectacular.utils import extend_schema
 from .models import VoterRecord, Election, ElectionData, EarlyVoteRecord, VoterEngagement
 from .serializers import (
@@ -13,9 +15,13 @@ from .serializers import (
 )
 from .utils import update_addresses, validate_office_type, get_valid_office_types_for_district
 from .tasks import verify_address, batch_verify_addresses, update_address_from_components
+from .services import VoterDeduplicationService
+from dashboards.models import FileUpload, Notification
 from services import FileUploadService, GeocodingService, DataEnrichmentService
 from validation import ElectionMetadata
 import json
+import os
+import uuid
 
 
 class VoterRecordListCreateView(generics.ListCreateAPIView):
@@ -105,6 +111,205 @@ class FileUploadView(APIView):
             return Response({
                 'success': False,
                 'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VoterDataUploadView(APIView):
+    """New enhanced file upload for voter data with deduplication."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """Upload CSV/XLSX file for voter data processing."""
+        
+        if 'file' not in request.FILES:
+            return Response({
+                'success': False,
+                'message': 'No file provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        uploaded_file = request.FILES['file']
+        file_type = request.data.get('file_type', 'voter_data')
+        
+        # Validate file type
+        if not uploaded_file.name.endswith(('.csv', '.xlsx', '.xls')):
+            return Response({
+                'success': False,
+                'message': 'Only CSV and Excel files are supported'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Save file to storage
+            file_path = default_storage.save(
+                f'uploads/{uuid.uuid4()}_{uploaded_file.name}',
+                ContentFile(uploaded_file.read())
+            )
+            
+            # Create FileUpload record
+            file_upload = FileUpload.objects.create(
+                user=request.user,
+                original_filename=uploaded_file.name,
+                file_type=file_type,
+                file_path=file_path,
+                file_size=uploaded_file.size,
+                status='pending'
+            )
+            
+            # Start background processing
+            from django.utils import timezone
+            from asgiref.sync import async_to_sync
+            from dashboards.consumers import send_notification_to_user
+            
+            # Send immediate response
+            response_data = {
+                'success': True,
+                'message': 'File uploaded successfully, processing started',
+                'upload_id': str(file_upload.id),
+                'filename': uploaded_file.name,
+                'file_size': uploaded_file.size
+            }
+            
+            # Create notification
+            Notification.objects.create(
+                recipient=request.user,
+                title="File Upload Started",
+                message=f"Processing {uploaded_file.name}...",
+                notification_type='info',
+                content_object=file_upload
+            )
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Upload failed: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProcessUploadView(APIView):
+    """Process uploaded file with deduplication."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, upload_id):
+        """Start processing the uploaded file."""
+        
+        try:
+            file_upload = get_object_or_404(
+                FileUpload, 
+                id=upload_id, 
+                user=request.user,
+                status='pending'
+            )
+            
+            # Initialize deduplication service
+            dedup_service = VoterDeduplicationService()
+            
+            # Process file asynchronously
+            # For now, we'll do it synchronously but this should be moved to Celery
+            try:
+                results = dedup_service.process_csv_upload(file_upload, request.user)
+                
+                return Response({
+                    'success': True,
+                    'message': 'File processed successfully',
+                    'results': results
+                })
+                
+            except Exception as e:
+                file_upload.status = 'failed'
+                file_upload.error_message = str(e)
+                file_upload.save()
+                
+                return Response({
+                    'success': False,
+                    'message': f'Processing failed: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except FileUpload.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'Upload not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class UploadStatusView(APIView):
+    """Get upload status and progress."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, upload_id):
+        """Get upload status."""
+        
+        try:
+            file_upload = get_object_or_404(
+                FileUpload,
+                id=upload_id,
+                user=request.user
+            )
+            
+            return Response({
+                'success': True,
+                'upload': {
+                    'id': str(file_upload.id),
+                    'filename': file_upload.original_filename,
+                    'status': file_upload.status,
+                    'progress_percent': file_upload.progress_percent,
+                    'records_total': file_upload.records_total,
+                    'records_processed': file_upload.records_processed,
+                    'records_created': file_upload.records_created,
+                    'records_updated': file_upload.records_updated,
+                    'records_duplicates': file_upload.records_duplicates,
+                    'records_errors': file_upload.records_errors,
+                    'error_message': file_upload.error_message,
+                    'created_at': file_upload.created_at,
+                    'completed_at': file_upload.completed_at,
+                }
+            })
+            
+        except FileUpload.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'Upload not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class DeduplicateExistingView(APIView):
+    """Deduplicate existing voter records."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """Run deduplication on existing records."""
+        
+        campaign_id = request.data.get('campaign_id')
+        
+        try:
+            dedup_service = VoterDeduplicationService()
+            results = dedup_service.deduplicate_existing_records(
+                user=request.user,
+                campaign_id=campaign_id
+            )
+            
+            # Create notification
+            Notification.objects.create(
+                recipient=request.user,
+                title="Deduplication Complete",
+                message=f"Processed {results['processed']} records, merged {results['merged']} duplicates",
+                notification_type='success'
+            )
+            
+            return Response({
+                'success': True,
+                'message': 'Deduplication completed',
+                'results': results
+            })
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Deduplication failed: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -461,6 +666,40 @@ def update_voter_addresses(request, voter_id):
             'success': True,
             'message': 'Address update queued',
             'task_id': task.id
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def voter_history(request, voter_id):
+    """Get change history for a specific voter."""
+    
+    try:
+        voter = get_object_or_404(VoterRecord, id=voter_id, account_owner=request.user)
+        
+        # Get historical records
+        history_records = voter.history.all().order_by('-history_date')[:50]
+        
+        history_data = []
+        for record in history_records:
+            history_data.append({
+                'history_id': record.history_id,
+                'history_date': record.history_date,
+                'history_type': record.history_type,
+                'history_user': record.history_user.phone_number if record.history_user else 'System',
+                'changes': record.diff_against(record.prev_record) if record.prev_record else None
+            })
+        
+        return Response({
+            'success': True,
+            'voter_id': str(voter.id),
+            'history': history_data
         })
         
     except Exception as e:

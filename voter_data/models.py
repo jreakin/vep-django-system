@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from simple_history.models import HistoricalRecords
 import uuid
 
 User = get_user_model()
@@ -157,10 +158,19 @@ class VoterRecord(models.Model):
     mailing_address = models.TextField(blank=True, help_text="Full mailing address")
     is_verified = models.BooleanField(default=False, help_text="Address verification status")
     
+    # Deduplication and sharing fields
+    shared_with = models.JSONField(default=list, blank=True, help_text="List of user IDs with access")
+    dedup_key = models.CharField(max_length=255, blank=True, help_text="Generated deduplication key")
+    is_duplicate = models.BooleanField(default=False)
+    canonical_record = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    
     # System fields
     account_owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_voters')
     last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Audit logging
+    history = HistoricalRecords()
 
     class Meta:
         indexes = [
