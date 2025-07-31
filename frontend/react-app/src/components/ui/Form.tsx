@@ -46,7 +46,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             setIsFocused(false)
             props.onBlur?.(e)
           }}
-          whileFocus={{ scale: 1.01 }}
+          whileFocus={{ translateY: -2 }}
           transition={{ duration: 0.2 }}
           style={{ willChange: 'transform' }}
           {...props}
