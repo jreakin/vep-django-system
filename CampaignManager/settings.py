@@ -207,7 +207,7 @@ try:
         'SERVE_INCLUDE_SCHEMA': False,
         'COMPONENT_SPLIT_REQUEST': True,
         'SORT_OPERATIONS': False,
-        'DISABLE_ERRORS_AND_WARNINGS': True,  # This can help with schema generation issues
+        'DISABLE_ERRORS_AND_WARNINGS': False,  # Ensure schema generation issues are visible and addressed
     }
 except ImportError:
     # drf-spectacular not available, use default schema class
