@@ -135,7 +135,7 @@ class StrategyRoomConsumer(AsyncWebsocketConsumer):
             return
         
         # Strategy room group for all connected users
-        self.room_group_name = 'strategy_room'
+        self.room_group_name = self.ROOM_GROUP_NAME
         
         # Join strategy room group
         await self.channel_layer.group_add(
