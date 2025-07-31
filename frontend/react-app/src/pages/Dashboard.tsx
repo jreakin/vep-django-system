@@ -12,8 +12,6 @@ import {
 import {
   TrendingUp,
   People,
-  Campaign,
-  AttachMoney,
   Dashboard as DashboardIcon,
   Notifications,
 } from '@mui/icons-material'

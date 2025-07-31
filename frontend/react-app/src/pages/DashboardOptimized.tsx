@@ -8,6 +8,8 @@ import {
   TabsContent,
   Button
 } from '../components/ui'
+import ConversationalAI from '../components/ai/ConversationalAI'
+import District3DMap from '../components/visualization/District3DMap'
 
 // RSC-like data fetching hook
 const useDashboardData = () => {
@@ -166,9 +168,189 @@ const QuickActions: React.FC = () => {
   )
 }
 
+// Sample data for 3D visualization
+const sampleGeographicData = [
+  {
+    id: '1',
+    name: 'Downtown Austin',
+    coordinates: [30.2672, -97.7431] as [number, number],
+    value: 0.8,
+    type: 'voter_density' as const,
+    details: {
+      total: 12500,
+      percentage: 68,
+      trend: 'up' as const,
+      description: 'High voter density in downtown core'
+    }
+  },
+  {
+    id: '2',
+    name: 'South Austin',
+    coordinates: [30.2240, -97.7690] as [number, number],
+    value: 0.6,
+    type: 'voter_density' as const,
+    details: {
+      total: 8900,
+      percentage: 45,
+      trend: 'stable' as const,
+      description: 'Moderate voter engagement'
+    }
+  },
+  {
+    id: '3',
+    name: 'East Austin',
+    coordinates: [30.2711, -97.7156] as [number, number],
+    value: 0.4,
+    type: 'fundraising' as const,
+    details: {
+      total: 125000,
+      percentage: 32,
+      trend: 'up' as const,
+      description: 'Growing fundraising activity'
+    }
+  },
+  {
+    id: '4',
+    name: 'North Austin',
+    coordinates: [30.3909, -97.7431] as [number, number],
+    value: 0.7,
+    type: 'canvassing_progress' as const,
+    details: {
+      total: 2840,
+      percentage: 78,
+      trend: 'up' as const,
+      description: 'Active canvassing campaign'
+    }
+  },
+  {
+    id: '5',
+    name: 'West Austin',
+    coordinates: [30.2672, -97.8088] as [number, number],
+    value: 0.5,
+    type: 'volunteer_activity' as const,
+    details: {
+      total: 156,
+      percentage: 23,
+      trend: 'down' as const,
+      description: 'Need more volunteer recruitment'
+    }
+  }
+]
+
+const sampleDistrictBounds = {
+  north: 30.4909,
+  south: 30.1240,
+  east: -97.6156,
+  west: -97.9088,
+  center: [30.2672, -97.7431] as [number, number]
+}
+
 // Main Dashboard Component with RSC-like architecture
 const DashboardOptimized: React.FC = () => {
   const { stats, loading, error, refetch } = useDashboardData()
+
+  // Handler for AI command execution
+  const handleExecuteCommand = async (command: any) => {
+    console.log('Executing command:', command)
+    
+    // Simulate command execution with delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    switch (command.type) {
+      case 'create_contact_list':
+        // Simulate contact list creation
+        return {
+          success: true,
+          result: {
+            id: Date.now(),
+            name: command.parameters.name,
+            count: Math.floor(Math.random() * 500) + 100,
+            filters: command.parameters
+          }
+        }
+      
+      case 'schedule_broadcast':
+        // Simulate broadcast scheduling
+        return {
+          success: true,
+          result: {
+            id: Date.now(),
+            scheduled_time: command.parameters.time,
+            recipients: command.parameters.recipients,
+            status: 'scheduled'
+          }
+        }
+      
+      case 'add_voter':
+        // Simulate voter addition
+        return {
+          success: true,
+          result: {
+            id: Date.now(),
+            name: command.parameters.name,
+            phone: command.parameters.phone,
+            status: 'added'
+          }
+        }
+      
+      case 'query_data':
+        // Simulate data query
+        return {
+          success: true,
+          result: {
+            query: command.parameters.query,
+            data: [
+              { category: 'Age 18-29', value: 25 },
+              { category: 'Age 30-49', value: 35 },
+              { category: 'Age 50-64', value: 30 },
+              { category: 'Age 65+', value: 10 }
+            ]
+          }
+        }
+      
+      default:
+        return {
+          success: false,
+          error: 'Unknown command type'
+        }
+    }
+  }
+
+  // Handler for analytics queries
+  const handleAnalyticsQuery = async (query: string) => {
+    console.log('Processing analytics query:', query)
+    
+    // Simulate analytics processing
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    return {
+      id: Date.now(),
+      natural_language_query: query,
+      query_type: 'demographic_analysis',
+      status: 'completed',
+      result_data: [
+        { name: 'Democrats', value: 45 },
+        { name: 'Republicans', value: 35 },
+        { name: 'Independents', value: 20 }
+      ],
+      chart_config: {
+        type: 'pie',
+        title: query
+      },
+      insights: [
+        'Democratic voters represent the largest segment',
+        'Independent voters are a key swing demographic',
+        'Voter engagement has increased 15% this quarter'
+      ],
+      execution_time_ms: 1200
+    }
+  }
+
+  // Handler for 3D data point clicks
+  const handleDataPointClick = (point: any) => {
+    console.log('Clicked data point:', point)
+    // You could show more details, navigate to a specific view, etc.
+  }
 
   if (loading) {
     return (
@@ -272,7 +454,8 @@ const DashboardOptimized: React.FC = () => {
       <TabsRoot defaultValue="overview" className="tw-space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
+          <TabsTrigger value="3d-analytics">3D Analytics</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         
@@ -283,13 +466,30 @@ const DashboardOptimized: React.FC = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="analytics" className="tw-space-y-6">
+        <TabsContent value="ai-assistant" className="tw-space-y-6">
           <div className="tw-bg-white tw-border tw-border-gray-200 tw-rounded-lg tw-p-6">
-            <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-4">Analytics Overview</h3>
-            <p className="tw-text-gray-600">
-              Detailed analytics and charts will be displayed here. This section will show voter engagement patterns, 
-              campaign performance metrics, and demographic breakdowns.
+            <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-4">AI Campaign Assistant</h3>
+            <p className="tw-text-gray-600 tw-mb-6">
+              Use natural language to manage your campaign. Create contact lists, schedule broadcasts, add voters, and analyze data.
             </p>
+            <ConversationalAI 
+              onExecuteCommand={handleExecuteCommand}
+              onAnalyticsQuery={handleAnalyticsQuery}
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="3d-analytics" className="tw-space-y-6">
+          <div className="tw-bg-white tw-border tw-border-gray-200 tw-rounded-lg tw-p-6">
+            <h3 className="tw-text-lg tw-font-semibold tw-text-gray-900 tw-mb-4">3D Geographic Analytics</h3>
+            <p className="tw-text-gray-600 tw-mb-6">
+              Interactive 3D visualization of your district data. Explore voter density, fundraising, and canvassing progress.
+            </p>
+            <District3DMap 
+              data={sampleGeographicData}
+              districtBounds={sampleDistrictBounds}
+              onDataPointClick={handleDataPointClick}
+            />
           </div>
         </TabsContent>
         

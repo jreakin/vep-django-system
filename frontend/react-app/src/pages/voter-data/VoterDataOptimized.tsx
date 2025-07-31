@@ -7,16 +7,10 @@ import {
   Input, 
   Modal, 
   ModalTrigger, 
-  ModalClose,
   Dropdown,
   DropdownButton,
   DropdownItem,
   DropdownSeparator,
-  DropdownLabel,
-  TabsRoot,
-  TabsList,
-  TabsTrigger,
-  TabsContent
 } from '../../components/ui'
 
 // Separate data-fetching hook for RSC-like pattern

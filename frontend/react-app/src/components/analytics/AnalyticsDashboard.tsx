@@ -21,7 +21,6 @@ import {
   CircularProgress,
   Stack,
   Paper,
-  Divider,
   Autocomplete,
   Switch,
   FormControlLabel,
@@ -293,12 +292,12 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey={chart_config?.valueKey || 'value'}
               >
-                {cached_data.map((entry: any, index: number) => (
+                {cached_data.map((_entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -588,8 +587,8 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
               freeSolo
               options={sampleQueries}
               value={currentQuery}
-              onChange={(event, newValue) => setCurrentQuery(newValue || '')}
-              onInputChange={(event, newInputValue) => setCurrentQuery(newInputValue)}
+              onChange={(_event, newValue) => setCurrentQuery(newValue || '')}
+              onInputChange={(_event, newInputValue) => setCurrentQuery(newInputValue)}
               renderInput={(params) => (
                 <TextField
                   {...params}

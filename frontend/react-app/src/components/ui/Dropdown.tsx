@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { ChevronDown, Check } from 'lucide-react'
-import { ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface DropdownProps {
   children: ReactNode

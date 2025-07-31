@@ -1,5 +1,5 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface TabsProps {
   defaultValue?: string
