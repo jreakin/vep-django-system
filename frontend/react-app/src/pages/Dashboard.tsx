@@ -54,9 +54,10 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) =>
 
 // Function to get appropriate metric component based on platform
 const getMetricComponent = () => {
-  // For now, always use SpatialMetricWidget, but keep MetricCard as fallback
-  console.log('Using SpatialMetricWidget, MetricCard available as fallback');
-  return 'spatial'; // Could return 'legacy' for non-visionOS environments
+  // Determine the platform or environment (mock condition for now)
+  const isVisionOS = true; // Replace with actual platform detection logic
+  console.log(`Using ${isVisionOS ? 'SpatialMetricWidget' : 'MetricCard'} based on platform`);
+  return isVisionOS ? 'spatial' : 'legacy';
 };
 
 const Dashboard: React.FC = () => {
