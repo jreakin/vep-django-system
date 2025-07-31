@@ -136,8 +136,8 @@ const Dashboard: React.FC = () => {
 
   const metrics = [
     {
-      title: 'Funds Raised',
-      value: stats.dashboards_count.toString(),
+      title: 'Funds Raised (Mock Data)',
+      value: `${stats.dashboards_count.toString()} (approx.)`,
       icon: <AttachMoney fontSize="large" />,
       color: '#1976d2',
       canPopOut: true,
