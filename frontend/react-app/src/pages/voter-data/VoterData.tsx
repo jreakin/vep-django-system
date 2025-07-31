@@ -89,8 +89,8 @@ const VoterData: React.FC = () => {
     fetchVoters()
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
+  const getStatusColor = (status: string | null | undefined) => {
+    switch ((status ?? '').toLowerCase()) {
       case 'active':
         return 'success'
       case 'inactive':
