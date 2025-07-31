@@ -12,6 +12,7 @@ from .serializers import (
     DashboardSerializer, AuditLogSerializer, NotificationSerializer,
     ChartConfigSerializer, FileUploadSerializer
 )
+from .analytics import AnalyticsService, SimpleNLPService, QueryConfig
 import json
 
 
@@ -323,3 +324,174 @@ def create_notification(request):
             'success': False,
             'message': 'Recipient not found'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AnalyticsQueryView(APIView):
+    """Generate charts from structured queries."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """Generate chart data from a query configuration."""
+        
+        try:
+            query_data = request.data.get('query', {})
+            query_config = QueryConfig(**query_data)
+            
+            analytics_service = AnalyticsService()
+            chart_data = analytics_service.generate_chart_from_query(
+                user=request.user,
+                query_config=query_config
+            )
+            
+            return Response({
+                'success': True,
+                'chart_data': chart_data.model_dump()
+            })
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NLPChartView(APIView):
+    """Generate charts from natural language queries."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """Generate chart from natural language query."""
+        
+        query_text = request.data.get('query', '')
+        save_chart = request.data.get('save_chart', False)
+        
+        if not query_text:
+            return Response({
+                'success': False,
+                'message': 'Query text is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Parse natural language query
+            nlp_service = SimpleNLPService()
+            query_config = nlp_service.parse_query(query_text)
+            
+            # Generate chart data
+            analytics_service = AnalyticsService()
+            chart_data = analytics_service.generate_chart_from_query(
+                user=request.user,
+                query_config=query_config
+            )
+            
+            # Optionally save chart configuration
+            chart_config = None
+            if save_chart:
+                chart_config = ChartConfig.objects.create(
+                    user=request.user,
+                    name=chart_data.title,
+                    description=f"Generated from: {query_text}",
+                    chart_type=chart_data.chart_type,
+                    data_source=query_config.model,
+                    query_config=query_config.model_dump(),
+                    display_config={
+                        'title': chart_data.title,
+                        'x_axis_label': chart_data.x_axis_label,
+                        'y_axis_label': chart_data.y_axis_label
+                    }
+                )
+            
+            response_data = {
+                'success': True,
+                'chart_data': chart_data.model_dump(),
+                'query_config': query_config.model_dump(),
+                'original_query': query_text
+            }
+            
+            if chart_config:
+                response_data['saved_chart_id'] = str(chart_config.id)
+            
+            return Response(response_data)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def dashboard_summary(request):
+    """Get comprehensive dashboard summary."""
+    
+    try:
+        analytics_service = AnalyticsService()
+        summary = analytics_service.generate_dashboard_summary(request.user)
+        
+        return Response({
+            'success': True,
+            'summary': summary
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_preset_charts(request):
+    """Create preset chart configurations for the user."""
+    
+    try:
+        analytics_service = AnalyticsService()
+        charts = analytics_service.create_preset_charts(request.user)
+        
+        return Response({
+            'success': True,
+            'message': f'Created {len(charts)} preset charts',
+            'chart_ids': [str(chart.id) for chart in charts]
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def chart_data(request, chart_id):
+    """Get current data for a specific chart configuration."""
+    
+    try:
+        chart = get_object_or_404(
+            ChartConfig,
+            id=chart_id,
+            user=request.user
+        )
+        
+        # Generate fresh data using the chart's query config
+        query_config = QueryConfig(**chart.query_config)
+        analytics_service = AnalyticsService()
+        chart_data = analytics_service.generate_chart_from_query(
+            user=request.user,
+            query_config=query_config
+        )
+        
+        return Response({
+            'success': True,
+            'chart_config': ChartConfigSerializer(chart).data,
+            'chart_data': chart_data.model_dump()
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
