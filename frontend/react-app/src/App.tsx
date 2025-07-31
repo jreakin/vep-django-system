@@ -18,8 +18,16 @@ import WalkListManager from './pages/canvassing/WalkListManager'
 import CanvassSessionDashboard from './pages/canvassing/CanvassSessionDashboard'
 import QuestionnaireBuilder from './pages/canvassing/QuestionnaireBuilder'
 import PlanManager from './pages/redistricting/PlanManager'
+import DistrictEditor from './pages/redistricting/DistrictEditor'
+import PlanComparison from './pages/redistricting/PlanComparison'
 import TerritoryManager from './pages/territories/TerritoryManager'
+import InteractiveMapper from './pages/territories/InteractiveMapper'
 import UserManagement from './pages/admin/UserManagement'
+import ImpersonationPanel from './pages/admin/ImpersonationPanel'
+import AuditLogPage from './pages/admin/AuditLogPage'
+import IntegrationsDashboard from './pages/integrations/IntegrationsDashboard'
+import PredictiveModeling from './pages/analytics/PredictiveModeling'
+import ReportBuilder from './pages/analytics/ReportBuilder'
 import './index.css'
 
 // Create Material-UI theme
@@ -88,8 +96,17 @@ const AppContent = () => {
                 <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
                 <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
                 <Route path="/redistricting" element={<PlanManager />} />
+                <Route path="/redistricting/editor" element={<DistrictEditor />} />
+                <Route path="/redistricting/editor/:planId" element={<DistrictEditor />} />
+                <Route path="/redistricting/comparison" element={<PlanComparison />} />
                 <Route path="/territories" element={<TerritoryManager />} />
+                <Route path="/territories/mapper" element={<InteractiveMapper />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/impersonation" element={<ImpersonationPanel />} />
+                <Route path="/admin/audit-logs" element={<AuditLogPage />} />
+                <Route path="/integrations" element={<IntegrationsDashboard />} />
+                <Route path="/analytics/modeling" element={<PredictiveModeling />} />
+                <Route path="/analytics/reports" element={<ReportBuilder />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
