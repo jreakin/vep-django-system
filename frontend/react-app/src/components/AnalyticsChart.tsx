@@ -1,7 +1,7 @@
 /**
  * AnalyticsChart component with NLP query support
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart3, 
   LineChart, 

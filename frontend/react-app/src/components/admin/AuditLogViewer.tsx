@@ -165,12 +165,12 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
         return <Logout color="info" fontSize="small" />
       case 'view':
       case 'access':
-        return <Visibility color="default" fontSize="small" />
+        return <Visibility color="inherit" fontSize="small" />
       case 'permission':
       case 'role':
         return <Security color="warning" fontSize="small" />
       default:
-        return <Settings color="default" fontSize="small" />
+        return <Settings color="inherit" fontSize="small" />
     }
   }
 
