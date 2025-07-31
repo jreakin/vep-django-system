@@ -19,9 +19,11 @@ django_asgi_app = get_asgi_application()
 
 # Import consumers after Django setup
 from dashboards.consumers import NotificationConsumer
+from dashboards.strategy_room_consumer import StrategyRoomConsumer
 
 websocket_urlpatterns = [
     re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
+    re_path(r'ws/strategy-room/(?P<room_id>\w+)/$', StrategyRoomConsumer.as_asgi()),
 ]
 
 application = ProtocolTypeRouter({

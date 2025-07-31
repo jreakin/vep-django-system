@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/auth/Login'
 import CampaignList from './pages/campaigns/CampaignList'
 import VoterData from './pages/voter-data/VoterData'
+import StrategyRoom from './pages/StrategyRoom'
 import './index.css'
 
 // Create Material-UI theme
@@ -72,6 +73,7 @@ const AppContent = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/campaigns" element={<CampaignList />} />
                 <Route path="/voter-data" element={<VoterData />} />
+                <Route path="/strategy-room" element={<StrategyRoom />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

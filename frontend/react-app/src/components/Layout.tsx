@@ -22,6 +22,7 @@ import {
   Settings as SettingsIcon,
   Menu as MenuIcon,
   Logout as LogoutIcon,
+  ViewInAr as VRIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -54,6 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Voter Data', icon: <PeopleIcon />, path: '/voter-data' },
+    { text: 'Strategy Room', icon: <VRIcon />, path: '/strategy-room' },
     { text: 'Canvassing', icon: <AssessmentIcon />, path: '/canvassing' },
     { text: 'Billing', icon: <BillingIcon />, path: '/billing' },
     { text: 'Integrations', icon: <SettingsIcon />, path: '/integrations' },
