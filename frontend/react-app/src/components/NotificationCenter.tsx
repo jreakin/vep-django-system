@@ -1,287 +1,253 @@
-/**
- * NotificationCenter component for real-time notifications
- */
 import React, { useState, useEffect } from 'react';
-import { 
-  Bell, 
-  CheckCircle, 
-  AlertCircle, 
-  Info, 
-  XCircle,
-  X
-} from 'lucide-react';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Badge,
+  Menu,
+  MenuItem,
+  Chip,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import {
+  Notifications,
+  CheckCircle,
+  Info,
+  Warning,
+  Error,
+} from '@mui/icons-material';
+import { useWebSocket } from '../hooks/useWebSocket';
+import dashboardService from '../services/dashboard';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  is_read: boolean;
-  created_at: string;
-  action_url?: string;
-  action_data?: any;
-}
+const NotificationCenter: React.FC = () => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [persistentNotifications, setPersistentNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { 
+    isConnected, 
+    notifications: wsNotifications, 
+    error: wsError,
+    markNotificationRead,
+    markAllNotificationsRead 
+  } = useWebSocket();
 
-interface NotificationCenterProps {
-  wsUrl?: string;
-  apiBaseUrl?: string;
-}
+  const open = Boolean(anchorEl);
 
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({
-  wsUrl = 'ws://localhost:8000/ws/notifications/',
-  apiBaseUrl = 'http://localhost:8000/api'
-}) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [ws, setWs] = useState<WebSocket | null>(null);
-
+  // Load initial notifications from API
   useEffect(() => {
-    // Load initial notifications
-    loadNotifications();
-    
-    // Connect to WebSocket
-    connectWebSocket();
-    
-    return () => {
-      if (ws) {
-        ws.close();
+    const loadNotifications = async () => {
+      try {
+        setLoading(true);
+        const notifications = await dashboardService.getNotifications();
+        setPersistentNotifications(notifications);
+        setError(null);
+      } catch (err: any) {
+        console.error('Failed to load notifications:', err);
+        setError('Failed to load notifications');
+      } finally {
+        setLoading(false);
       }
     };
+
+    loadNotifications();
   }, []);
 
-  const connectWebSocket = () => {
+  // Combine WebSocket and persistent notifications
+  const allNotifications = [...wsNotifications, ...persistentNotifications];
+  const unreadCount = allNotifications.filter(n => !n.is_read).length;
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
     try {
-      const websocket = new WebSocket(wsUrl);
+      // Mark read via WebSocket if it's a WebSocket notification
+      const isWsNotification = wsNotifications.some(n => n.id === notificationId);
       
-      websocket.onopen = () => {
-        console.log('Connected to notification WebSocket');
-        setWs(websocket);
-      };
-      
-      websocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'notification') {
-          addNotification(data.notification);
-        }
-      };
-      
-      websocket.onclose = () => {
-        console.log('Disconnected from notification WebSocket');
-        // Attempt to reconnect after 5 seconds
-        setTimeout(connectWebSocket, 5000);
-      };
-      
-      websocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-      
-    } catch (error) {
-      console.error('Failed to connect to WebSocket:', error);
+      if (isWsNotification) {
+        markNotificationRead(notificationId);
+      } else {
+        // Mark read via API for persistent notifications
+        await dashboardService.markNotificationsRead([notificationId]);
+        setPersistentNotifications(prev => 
+          prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
     }
   };
 
-  const loadNotifications = async () => {
+  const handleMarkAllAsRead = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/dashboards/notifications/`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.results || data);
+      // Mark all WebSocket notifications as read
+      markAllNotificationsRead();
+      
+      // Mark all persistent notifications as read
+      const unreadPersistentIds = persistentNotifications
+        .filter(n => !n.is_read)
+        .map(n => n.id);
         
-        // Load unread count
-        const countResponse = await fetch(`${apiBaseUrl}/dashboards/notifications/count/`);
-        if (countResponse.ok) {
-          const countData = await countResponse.json();
-          setUnreadCount(countData.unread_count);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-    }
-  };
-
-  const addNotification = (notification: Notification) => {
-    setNotifications(prev => [notification, ...prev]);
-    if (!notification.is_read) {
-      setUnreadCount(prev => prev + 1);
-    }
-  };
-
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/dashboards/notifications/mark-read/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          notification_ids: [notificationId]
-        })
-      });
-      
-      if (response.ok) {
-        setNotifications(prev => 
-          prev.map(notif => 
-            notif.id === notificationId 
-              ? { ...notif, is_read: true }
-              : notif
-          )
+      if (unreadPersistentIds.length > 0) {
+        await dashboardService.markNotificationsRead(unreadPersistentIds);
+        setPersistentNotifications(prev => 
+          prev.map(n => ({ ...n, is_read: true }))
         );
-        setUnreadCount(prev => Math.max(0, prev - 1));
       }
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const response = await fetch(`${apiBaseUrl}/dashboards/notifications/mark-read/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mark_all: true
-        })
-      });
       
-      if (response.ok) {
-        setNotifications(prev => 
-          prev.map(notif => ({ ...notif, is_read: true }))
-        );
-        setUnreadCount(0);
-      }
-    } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      handleClose();
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err);
     }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle color="success" />;
       case 'warning':
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+        return <Warning color="warning" />;
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <Error color="error" />;
       default:
-        return <Info className="w-5 h-5 text-blue-500" />;
+        return <Info color="info" />;
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'success':
+        return 'success';
+      case 'warning':
+        return 'warning';
+      case 'error':
+        return 'error';
+      default:
+        return 'info';
+    }
   };
 
   return (
-    <div className="relative">
-      {/* Notification Bell */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md"
+    <>
+      <IconButton 
+        color="inherit" 
+        onClick={handleClick}
+        sx={{ position: 'relative' }}
       >
-        <Bell className="w-6 h-6" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
+        <Badge badgeContent={unreadCount} color="error">
+          <Notifications />
+        </Badge>
+      </IconButton>
 
-      {/* Notification Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Notifications</h3>
-            <div className="flex space-x-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Mark all read
-                </button>
-              )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No notifications
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                    !notification.is_read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                  }`}
-                  onClick={() => {
-                    if (!notification.is_read) {
-                      markAsRead(notification.id);
-                    }
-                    if (notification.action_url) {
-                      window.location.href = notification.action_url;
-                    }
-                  }}
-                >
-                  <div className="flex items-start space-x-3">
-                    {getNotificationIcon(notification.type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {notification.title}
-                        </p>
-                        <span className="text-xs text-gray-500 ml-2">
-                          {formatTime(notification.created_at)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {notification.message}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          style: {
+            maxHeight: 400,
+            width: 350,
+          },
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Notifications</Typography>
+            {allNotifications.length > 0 && (
+              <IconButton size="small" onClick={handleMarkAllAsRead}>
+                <CheckCircle fontSize="small" />
+              </IconButton>
             )}
-          </div>
-
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  // Navigate to full notifications page
-                  window.location.href = '/notifications';
-                }}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
-              >
-                View all notifications
-              </button>
-            </div>
+          </Box>
+          {!isConnected && (
+            <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
+              Real-time notifications disconnected
+            </Alert>
           )}
-        </div>
-      )}
-    </div>
+          {(error || wsError) && (
+            <Alert severity="error" sx={{ mt: 1, mb: 1 }}>
+              {error || wsError}
+            </Alert>
+          )}
+        </Box>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : allNotifications.length === 0 ? (
+          <MenuItem disabled>
+            <Typography variant="body2" color="text.secondary">
+              No notifications
+            </Typography>
+          </MenuItem>
+        ) : (
+          allNotifications.slice(0, 10).map((notification) => (
+            <MenuItem
+              key={notification.id}
+              onClick={() => handleMarkAsRead(notification.id)}
+              sx={{
+                opacity: notification.is_read ? 0.6 : 1,
+                borderBottom: 1,
+                borderColor: 'divider',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '100%' }}>
+                <Box sx={{ mr: 1, mt: 0.5 }}>
+                  {getNotificationIcon(notification.type)}
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle2" noWrap>
+                    {notification.title}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ 
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {notification.message}
+                  </Typography>
+                  <Box sx={{ mt: 0.5 }}>
+                    <Chip
+                      label={notification.type}
+                      size="small"
+                      color={getNotificationColor(notification.type) as any}
+                      variant="outlined"
+                    />
+                  </Box>
+                </Box>
+                {!notification.is_read && (
+                  <Box 
+                    sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      backgroundColor: 'primary.main', 
+                      borderRadius: '50%',
+                      ml: 1,
+                      mt: 1
+                    }} 
+                  />
+                )}
+              </Box>
+            </MenuItem>
+          ))
+        )}
+      </Menu>
+    </>
   );
 };
 

@@ -27,6 +27,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from '../store'
 import { logout } from '../store/authSlice'
+import NotificationCenter from './NotificationCenter'
 
 const drawerWidth = 240
 
@@ -107,8 +108,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             Political Campaign Management System
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Typography variant="body2">
-            {user?.first_name || user?.phone_number}
+          <NotificationCenter />
+          <Typography variant="body2" sx={{ ml: 2 }}>
+            {user?.phone_number}
           </Typography>
         </Toolbar>
       </AppBar>
