@@ -43,7 +43,7 @@ class VoterDeduplicationService:
         try:
             # Validate file size (e.g., max 10 MB)
             max_file_size = 10 * 1024 * 1024  # 10 MB
-            if file_upload.file_path.size > max_file_size:
+            if file_upload.file_size > max_file_size:
                 raise ValueError("Uploaded file exceeds the maximum allowed size of 10 MB.")
             
             # Read and process CSV file in chunks
