@@ -4,6 +4,9 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 # from impersonate.admin import UserAdminImpersonateMixin  # Temporarily commented out
+# TODO: Re-enable UserAdminImpersonateMixin once issue #1234 is resolved. 
+#       This was disabled due to [reason, e.g., security concerns]. 
+#       Target resolution: Q4 2023. See tracking issue: https://tracker.example.com/issues/1234
 from .models import (
     User, AuthPIN, OwnerAccount, StateAccount, CountyAccount, 
     CampaignAccount, VendorAccount, Invoice, Payment, VolunteerInvite
