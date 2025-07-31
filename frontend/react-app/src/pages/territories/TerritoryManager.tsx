@@ -161,24 +161,32 @@ const TerritoryManager: React.FC = () => {
   }
 
   const handleCreate = (data: TerritoryFormData) => {
-    // For demo purposes, create a simple polygon geometry
-    const mockGeometry: GeoJSON.Polygon = {
-      type: 'Polygon',
-      coordinates: [[
-        [-74.006, 40.7128],
-        [-74.005, 40.7128],
-        [-74.005, 40.7138],
-        [-74.006, 40.7138],
-        [-74.006, 40.7128]
-      ]]
+    let geometry: GeoJSON.Polygon | null = null;
+
+    if (process.env.REACT_APP_USE_MOCK_GEOMETRY === 'true') {
+      // Use mock geometry if enabled via environment variable
+      geometry = {
+        type: 'Polygon',
+        coordinates: [[
+          [-74.006, 40.7128],
+          [-74.005, 40.7128],
+          [-74.005, 40.7138],
+          [-74.006, 40.7138],
+          [-74.006, 40.7128]
+        ]]
+      };
+    } else {
+      // TODO: Integrate with a boundary-drawing tool or accept user input
+      console.error('Boundary drawing functionality is not implemented.');
+      return;
     }
 
     createMutation.mutate({
       ...data,
-      geometry: mockGeometry,
+      geometry: geometry,
       population: Math.floor(Math.random() * 10000) + 1000,
       voter_count: Math.floor(Math.random() * 5000) + 500
-    })
+    });
   }
 
   const handleEdit = (territory: Territory) => {
