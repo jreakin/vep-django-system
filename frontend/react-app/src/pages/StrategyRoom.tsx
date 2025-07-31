@@ -1,17 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { 
-  VRButton, 
-  ARButton, 
-  XR, 
-  Controllers, 
-  Hands, 
-  useXR,
-  createXRStore
-} from '@react-three/xr'
-import { 
   OrbitControls, 
-  Environment, 
   Text, 
   Box, 
   Sphere
@@ -27,7 +17,7 @@ import {
   List,
   ListItem,
   ListItemText,
-  Grid2 as Grid,
+  Grid,
   IconButton,
   Chip
 } from '@mui/material'
@@ -39,6 +29,14 @@ import {
   VolumeOff
 } from '@mui/icons-material'
 import * as THREE from 'three'
+
+// Dynamically import XR components to handle missing dependencies gracefully
+let XRComponents: any = null
+try {
+  XRComponents = require('@react-three/xr')
+} catch (error) {
+  console.warn('WebXR components not available:', error)
+}
 
 // WebSocket service for real-time collaboration
 class StrategyRoomWebSocket {
@@ -234,7 +232,6 @@ function XRScene({
 
   return (
     <>
-      <Environment preset="sunset" />
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
       
@@ -269,7 +266,6 @@ function XRScene({
       {models.map((model, index) => (
         <USDZModelViewer
           key={index}
-          modelUrl={model.url}
           position={model.position}
           scale={model.scale}
         />
@@ -296,13 +292,18 @@ export default function StrategyRoom() {
   const [newMessage, setNewMessage] = useState('')
   const [isConnected, setIsConnected] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
+  const [xrAvailable, setXrAvailable] = useState(false)
   
   const roomId = 'default' // In a real app, this would come from URL params
-  const store = createXRStore()
+
+  // Check if XR components are available
+  useEffect(() => {
+    setXrAvailable(!!XRComponents)
+  }, [])
 
   // Check WebXR support
   useEffect(() => {
-    if ('xr' in navigator) {
+    if ('xr' in navigator && XRComponents) {
       navigator.xr!.isSessionSupported('immersive-vr').then((supported) => {
         setIsWebXRSupported(supported)
       }).catch(() => {
@@ -311,7 +312,7 @@ export default function StrategyRoom() {
     } else {
       setIsWebXRSupported(false)
     }
-  }, [])
+  }, [xrAvailable])
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -415,7 +416,49 @@ export default function StrategyRoom() {
     )
   }
 
-  if (!isWebXRSupported) {
+  // Render WebXR-enabled or fallback version
+  const renderCanvas = () => {
+    if (xrAvailable && isWebXRSupported && XRComponents) {
+      const { XR, Controllers, Hands, VRButton, ARButton, createXRStore } = XRComponents
+      const store = createXRStore()
+      
+      return (
+        <>
+          <Canvas camera={{ position: [0, 1.6, 5] }}>
+            <XR store={store}>
+              <XRScene 
+                users={users} 
+                models={models} 
+                onUserPosition={handleUserPosition}
+              />
+              <Controllers />
+              <Hands />
+            </XR>
+            <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
+          </Canvas>
+          
+          {/* XR Buttons */}
+          <MuiBox sx={{ position: 'absolute', bottom: 10, right: 10, display: 'flex', gap: 1 }}>
+            <VRButton store={store} />
+            <ARButton store={store} />
+          </MuiBox>
+        </>
+      )
+    } else {
+      return (
+        <Canvas camera={{ position: [0, 1.6, 5] }}>
+          <XRScene 
+            users={users} 
+            models={models} 
+            onUserPosition={handleUserPosition}
+          />
+          <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
+        </Canvas>
+      )
+    }
+  }
+
+  if (!isWebXRSupported && !xrAvailable) {
     return (
       <MuiBox sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
@@ -445,14 +488,7 @@ export default function StrategyRoom() {
         </Typography>
         
         <MuiBox sx={{ height: '60vh', border: '1px solid #ccc', borderRadius: 2 }}>
-          <Canvas camera={{ position: [0, 1.6, 5] }}>
-            <XRScene 
-              users={users} 
-              models={models} 
-              onUserPosition={handleUserPosition}
-            />
-            <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-          </Canvas>
+          {renderCanvas()}
         </MuiBox>
       </MuiBox>
     )
@@ -487,24 +523,7 @@ export default function StrategyRoom() {
               </MuiBox>
               
               <MuiBox sx={{ height: '60vh', border: '1px solid #ccc', borderRadius: 2, position: 'relative' }}>
-                <Canvas camera={{ position: [0, 1.6, 5] }}>
-                  <XR store={store}>
-                    <XRScene 
-                      users={users} 
-                      models={models} 
-                      onUserPosition={handleUserPosition}
-                    />
-                    <Controllers />
-                    <Hands />
-                  </XR>
-                  <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-                </Canvas>
-                
-                {/* XR Buttons */}
-                <MuiBox sx={{ position: 'absolute', bottom: 10, right: 10, display: 'flex', gap: 1 }}>
-                  <VRButton store={store} />
-                  <ARButton store={store} />
-                </MuiBox>
+                {renderCanvas()}
               </MuiBox>
             </CardContent>
           </Card>
