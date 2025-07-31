@@ -7,8 +7,15 @@ from django.conf import settings
 import json
 
 
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+
+@login_required
 def schema_debug_view(request):
     """Debug endpoint to help diagnose schema generation issues."""
+    
+    if not settings.DEBUG:
+        raise PermissionDenied("This view is only accessible in DEBUG mode.")
     
     debug_info = {
         'django_version': getattr(settings, 'DJANGO_VERSION', 'Unknown'),
