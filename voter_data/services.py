@@ -46,16 +46,14 @@ class VoterDeduplicationService:
             if file_upload.file_path.size > max_file_size:
                 raise ValueError("Uploaded file exceeds the maximum allowed size of 10 MB.")
             
-            # Read CSV file in chunks
+            # Read and process CSV file in chunks
             chunks = pd.read_csv(file_upload.file_path, chunksize=1000)
-            file_upload.records_total = sum(1 for _ in pd.read_csv(file_upload.file_path, chunksize=1000))
             file_upload.status = 'processing'
             file_upload.save()
             
-            # Process records in batches
-            batch_size = 1000
+            # Initialize results
             results = {
-                'total': len(df),
+                'total': 0,
                 'processed': 0,
                 'created': 0,
                 'updated': 0,
