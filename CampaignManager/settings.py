@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'django.contrib.gis',  # GeoDjango support - disabled for now
+    'django.contrib.gis',  # GeoDjango support
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -58,6 +58,10 @@ INSTALLED_APPS = [
     'canvassing',
     'campaigns',
     'frontend',
+    'forms',
+    'territories',
+    'redistricting',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -103,10 +107,10 @@ ASGI_APPLICATION = 'CampaignManager.asgi.application'
 DATABASE_URL = config('DATABASE_URL', default='')
 
 if DATABASE_URL and DATABASE_URL.startswith('postgresql'):
-    # Production PostgreSQL/Supabase configuration
+    # Production PostgreSQL/PostGIS configuration
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',  # Regular PostgreSQL for now
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',  # PostGIS for spatial support
             'NAME': config('DB_NAME', default='campaignmanager'),
             'USER': config('DB_USER', default='user'),
             'PASSWORD': config('DB_PASSWORD', default='password'),
@@ -115,10 +119,10 @@ if DATABASE_URL and DATABASE_URL.startswith('postgresql'):
         }
     }
 else:
-    # Development SQLite configuration
+    # Development SpatiaLite configuration
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',  # Regular SQLite for now
+            'ENGINE': 'django.contrib.gis.db.backends.spatialite',  # SpatiaLite for spatial support
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }

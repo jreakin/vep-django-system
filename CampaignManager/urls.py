@@ -37,6 +37,13 @@ urlpatterns = [
     path('api/integrations/', include('integrations.urls')),
     path('api/canvassing/', include('canvassing.urls')),
     path('api/campaigns/', include('campaigns.urls')),
+    path('api/forms/', include('forms.urls')),
+    path('api/territories/', include('territories.urls')),
+    path('api/redistricting/', include('redistricting.urls')),
+    path('api/analytics/', include('analytics.urls')),
+    
+    # Impersonation
+    path('impersonate/', include('impersonate.urls')),
     
     # Frontend (placeholder)
     path('', include('frontend.urls')),
