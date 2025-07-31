@@ -158,7 +158,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const pollUploadStatus = async (uploadId: string) => {
     let attempts = 0;
-    const maxAttempts = 120; // 2 minutes max polling
+    const maxAttempts = parseInt(process.env.REACT_APP_MAX_POLL_ATTEMPTS || '120', 10); // Configurable max polling attempts
 
     const poll = async () => {
       try {
