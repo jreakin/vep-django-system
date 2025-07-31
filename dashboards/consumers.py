@@ -11,6 +11,10 @@ User = get_user_model()
 class NotificationConsumer(AsyncWebsocketConsumer):
     """WebSocket consumer for real-time notifications."""
     
+    connection_limits = {}  # Track active connections per user
+    max_connections_per_user = 5  # Maximum allowed connections per user
+    message_rate_limit = 10  # Maximum messages per second
+    
     async def connect(self):
         """Handle WebSocket connection."""
         self.user = self.scope['user']
