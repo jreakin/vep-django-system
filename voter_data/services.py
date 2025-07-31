@@ -41,9 +41,14 @@ class VoterDeduplicationService:
     def process_csv_upload(self, file_upload: FileUpload, user: User) -> Dict:
         """Process a CSV file upload with deduplication."""
         try:
-            # Read CSV file
-            df = pd.read_csv(file_upload.file_path)
-            file_upload.records_total = len(df)
+            # Validate file size (e.g., max 10 MB)
+            max_file_size = 10 * 1024 * 1024  # 10 MB
+            if file_upload.file_path.size > max_file_size:
+                raise ValueError("Uploaded file exceeds the maximum allowed size of 10 MB.")
+            
+            # Read CSV file in chunks
+            chunks = pd.read_csv(file_upload.file_path, chunksize=1000)
+            file_upload.records_total = sum(1 for _ in pd.read_csv(file_upload.file_path, chunksize=1000))
             file_upload.status = 'processing'
             file_upload.save()
             
