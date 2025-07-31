@@ -1,9 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import { Provider } from 'react-redux'
+import { Provider, useSelector } from 'react-redux'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { store } from './store/index'
+import type { RootState } from './store'
+import { useAuthInitialization } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/auth/Login'
@@ -43,27 +45,49 @@ const queryClient = new QueryClient({
   },
 })
 
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth)
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  
+  return <>{children}</>
+}
+
+// App content with auth initialization
+const AppContent = () => {
+  useAuthInitialization()
+  
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/*" element={
+          <ProtectedRoute>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/campaigns" element={<CampaignList />} />
+                <Route path="/voter-data" element={<VoterData />} />
+              </Routes>
+            </Layout>
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Router>
+  )
+}
+
 function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/*" element={
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/campaigns" element={<CampaignList />} />
-                    <Route path="/voter-data" element={<VoterData />} />
-                  </Routes>
-                </Layout>
-              } />
-            </Routes>
-          </Router>
+          <AppContent />
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>

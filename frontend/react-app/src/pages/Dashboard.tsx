@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Card,
@@ -6,13 +6,18 @@ import {
   Typography,
   Paper,
   Stack,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import {
   TrendingUp,
   People,
   Campaign,
   AttachMoney,
+  Dashboard as DashboardIcon,
+  Notifications,
 } from '@mui/icons-material'
+import dashboardService, { type DashboardStats } from '../services/dashboard'
 
 interface MetricCardProps {
   title: string
@@ -40,29 +45,88 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) =>
 )
 
 const Dashboard: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const dashboardStats = await dashboardService.getStats()
+        setStats(dashboardStats)
+      } catch (err: any) {
+        console.error('Failed to fetch dashboard data:', err)
+        setError(err.response?.data?.error || 'Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={40} />
+        <Typography variant="body1" sx={{ ml: 2 }}>
+          Loading dashboard...
+        </Typography>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Dashboard
+        </Typography>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    )
+  }
+
+  if (!stats) {
+    return (
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Dashboard
+        </Typography>
+        <Alert severity="info">
+          No dashboard data available.
+        </Alert>
+      </Box>
+    )
+  }
+
   const metrics = [
     {
-      title: 'Active Campaigns',
-      value: '12',
-      icon: <Campaign fontSize="large" />,
+      title: 'Dashboards',
+      value: stats.dashboards_count.toString(),
+      icon: <DashboardIcon fontSize="large" />,
       color: '#1976d2',
     },
     {
       title: 'Total Voters',
-      value: '156,789',
+      value: stats.total_voters ? stats.total_voters.toLocaleString() : 'N/A',
       icon: <People fontSize="large" />,
       color: '#2e7d32',
     },
     {
-      title: 'Engagement Rate',
-      value: '67.3%',
+      title: 'Charts Created',
+      value: stats.charts_count.toString(),
       icon: <TrendingUp fontSize="large" />,
       color: '#ed6c02',
     },
     {
-      title: 'Monthly Revenue',
-      value: '$12,450',
-      icon: <AttachMoney fontSize="large" />,
+      title: 'Notifications',
+      value: stats.unread_notifications.toString(),
+      icon: <Notifications fontSize="large" />,
       color: '#9c27b0',
     },
   ]
@@ -96,7 +160,7 @@ const Dashboard: React.FC = () => {
               Recent Activity
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Campaign analytics and voter engagement charts will be displayed here.
+              Recent uploads: {stats.recent_uploads} | Recent voters: {stats.recent_voters || 0}
             </Typography>
           </Paper>
         </Box>

@@ -2,12 +2,13 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface User {
-  id: number
+  id: string  // UUID field
   phone_number: string
-  user_type: 'state_party' | 'county_party' | 'campaign' | 'vendor'
-  first_name?: string
-  last_name?: string
+  role: 'owner' | 'state' | 'county' | 'campaign' | 'vendor'
   email?: string
+  is_verified: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface AuthState {
@@ -21,7 +22,7 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('token'),
   isLoading: false,
   error: null,
 }
@@ -57,11 +58,17 @@ const authSlice = createSlice({
       state.error = null
       localStorage.removeItem('token')
     },
+    initializeAuth: (state, action: PayloadAction<User>) => {
+      state.user = action.payload
+      state.isAuthenticated = true
+      state.isLoading = false
+      state.error = null
+    },
     clearError: (state) => {
       state.error = null
     },
   },
 })
 
-export const { loginStart, loginSuccess, loginFailure, logout, clearError } = authSlice.actions
+export const { loginStart, loginSuccess, loginFailure, logout, clearError, initializeAuth } = authSlice.actions
 export default authSlice.reducer

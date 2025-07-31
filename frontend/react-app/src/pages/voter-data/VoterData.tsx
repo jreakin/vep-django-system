@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -16,68 +16,85 @@ import {
   TextField,
   InputAdornment,
   Stack,
+  CircularProgress,
+  Alert,
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material'
 import {
   CloudUpload as UploadIcon,
   Search as SearchIcon,
   Download as DownloadIcon,
   Analytics as AnalyticsIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material'
-
-interface Voter {
-  id: number
-  first_name: string
-  last_name: string
-  phone_number: string
-  state: string
-  county: string
-  registration_status: 'active' | 'inactive' | 'pending'
-  last_contact: string | null
-}
+import voterDataService, { type VoterRecord } from '../../services/voterData'
+import FileUpload from '../../components/FileUpload'
 
 const VoterData: React.FC = () => {
-  const [searchTerm, setSearchTerm] = React.useState('')
+  const [voters, setVoters] = useState<VoterRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [stateFilter, setStateFilter] = useState('')
+  const [partyFilter, setPartyFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
+  const [totalCount, setTotalCount] = useState(0)
+  const [showUpload, setShowUpload] = useState(false)
 
-  // Mock data - in real app this would come from API
-  const voters: Voter[] = [
-    {
-      id: 1,
-      first_name: 'John',
-      last_name: 'Smith',
-      phone_number: '+1234567890',
-      state: 'CA',
-      county: 'Los Angeles',
-      registration_status: 'active',
-      last_contact: '2024-01-15',
-    },
-    {
-      id: 2,
-      first_name: 'Jane',
-      last_name: 'Doe',
-      phone_number: '+1987654321',
-      state: 'CA',
-      county: 'Orange',
-      registration_status: 'active',
-      last_contact: null,
-    },
-    {
-      id: 3,
-      first_name: 'Bob',
-      last_name: 'Johnson',
-      phone_number: '+1555123456',
-      state: 'TX',
-      county: 'Harris',
-      registration_status: 'pending',
-      last_contact: '2024-01-10',
-    },
-  ]
+  const fetchVoters = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = {
+        search: searchTerm || undefined,
+        state: stateFilter || undefined,
+        party_affiliation: partyFilter || undefined,
+        registration_status: statusFilter || undefined,
+        page: page + 1,  // API is 1-indexed
+        page_size: rowsPerPage,
+      }
+      
+      const result = await voterDataService.getVoters(params)
+      setVoters(result.results)
+      setTotalCount(result.count)
+    } catch (err: any) {
+      console.error('Failed to fetch voters:', err)
+      setError(err.response?.data?.error || 'Failed to load voter data')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const getStatusColor = (status: Voter['registration_status']) => {
-    switch (status) {
+  useEffect(() => {
+    fetchVoters()
+  }, [searchTerm, stateFilter, partyFilter, statusFilter, page, rowsPerPage])
+
+  const handlePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const handleRefresh = () => {
+    fetchVoters()
+  }
+
+  const getStatusColor = (status: string | null | undefined) => {
+    switch ((status ?? '').toLowerCase()) {
       case 'active':
         return 'success'
       case 'inactive':
-        return 'error'
+        return 'default'
       case 'pending':
         return 'warning'
       default:
@@ -85,19 +102,16 @@ const VoterData: React.FC = () => {
     }
   }
 
-  const filteredVoters = voters.filter(
-    (voter) =>
-      voter.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      voter.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      voter.phone_number.includes(searchTerm)
-  )
-
-  const stats = [
-    { label: 'Total Voters', value: '156,789', color: '#1976d2' },
-    { label: 'Active Registrations', value: '142,456', color: '#2e7d32' },
-    { label: 'Pending Reviews', value: '8,234', color: '#ed6c02' },
-    { label: 'Data Quality Score', value: '94.2%', color: '#9c27b0' },
-  ]
+  if (loading && voters.length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={40} />
+        <Typography variant="body1" sx={{ ml: 2 }}>
+          Loading voter data...
+        </Typography>
+      </Box>
+    )
+  }
 
   return (
     <Box>
@@ -108,34 +122,18 @@ const VoterData: React.FC = () => {
         Manage voter databases, upload new data, and analyze voter engagement patterns.
       </Typography>
 
-      {/* Statistics */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
-          gap: 2,
-          mb: 4,
-        }}
-      >
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ color: stat.color, fontWeight: 'bold' }}>
-                {stat.value}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {stat.label}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {/* Action Buttons */}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
         <Button
           variant="contained"
           startIcon={<UploadIcon />}
+          onClick={() => setShowUpload(!showUpload)}
           sx={{ borderRadius: 2 }}
         >
           Upload CSV Data
@@ -152,65 +150,177 @@ const VoterData: React.FC = () => {
           startIcon={<AnalyticsIcon />}
           sx={{ borderRadius: 2 }}
         >
-          View Analytics
+          Analytics
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={handleRefresh}
+          disabled={loading}
+          sx={{ borderRadius: 2 }}
+        >
+          Refresh
         </Button>
       </Stack>
 
-      {/* Search */}
-      <TextField
-        fullWidth
-        placeholder="Search voters by name or phone number..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 3 }}
-      />
+      {/* File Upload Component */}
+      {showUpload && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Upload Voter Data
+            </Typography>
+            <FileUpload 
+              onUploadComplete={() => {
+                setShowUpload(false)
+                handleRefresh()
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filters */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField
+              placeholder="Search voters..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ flex: 1 }}
+            />
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>State</InputLabel>
+              <Select
+                value={stateFilter}
+                label="State"
+                onChange={(e) => setStateFilter(e.target.value)}
+              >
+                <MenuItem value="">All States</MenuItem>
+                <MenuItem value="CA">California</MenuItem>
+                <MenuItem value="TX">Texas</MenuItem>
+                <MenuItem value="FL">Florida</MenuItem>
+                <MenuItem value="NY">New York</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>Party</InputLabel>
+              <Select
+                value={partyFilter}
+                label="Party"
+                onChange={(e) => setPartyFilter(e.target.value)}
+              >
+                <MenuItem value="">All Parties</MenuItem>
+                <MenuItem value="Democratic">Democratic</MenuItem>
+                <MenuItem value="Republican">Republican</MenuItem>
+                <MenuItem value="Independent">Independent</MenuItem>
+                <MenuItem value="Other">Other</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </CardContent>
+      </Card>
 
       {/* Voter Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Last Contact</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredVoters.map((voter) => (
-              <TableRow key={voter.id}>
-                <TableCell>
-                  {voter.first_name} {voter.last_name}
-                </TableCell>
-                <TableCell>{voter.phone_number}</TableCell>
-                <TableCell>
-                  {voter.county}, {voter.state}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={voter.registration_status.toUpperCase()}
-                    color={getStatusColor(voter.registration_status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  {voter.last_contact
-                    ? new Date(voter.last_contact).toLocaleDateString()
-                    : 'Never'}
-                </TableCell>
+      <Paper>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Address</TableCell>
+                <TableCell>State</TableCell>
+                <TableCell>Party</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Registration Date</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
+                    <CircularProgress size={24} />
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Loading...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : voters.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No voter records found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                voters.map((voter) => (
+                  <TableRow key={voter.id}>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {voter.name || `${voter.first_name} ${voter.last_name}`.trim()}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{voter.phone}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                        {voter.address ? `${voter.address}, ${voter.city}` : 'Not provided'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{voter.state}</TableCell>
+                    <TableCell>{voter.party_affiliation}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={voter.voter_registration_status || 'Unknown'}
+                        color={getStatusColor(voter.voter_registration_status) as any}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {voter.voter_registration_date 
+                        ? new Date(voter.voter_registration_date).toLocaleDateString()
+                        : 'Not available'
+                      }
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />
+      </Paper>
     </Box>
   )
 }
