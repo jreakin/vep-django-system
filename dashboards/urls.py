@@ -29,6 +29,7 @@ urlpatterns = [
     # Analytics & NLP
     path('analytics/query/', views.AnalyticsQueryView.as_view(), name='analytics_query'),
     path('analytics/nlp/', views.NLPChartView.as_view(), name='nlp_chart'),
+    path('analytics/conversation/', views.ConversationalUIView.as_view(), name='conversational_ui'),
     
     # File uploads
     path('uploads/', views.FileUploadListView.as_view(), name='upload_list'),
