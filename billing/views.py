@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
-from drf_spectacular.utils import extend_schema
+from safe_spectacular import extend_schema
 from users.models import Invoice, Payment
 from .serializers import (
     InvoiceSerializer, PaymentSerializer, CreateInvoiceSerializer, CreatePaymentSerializer

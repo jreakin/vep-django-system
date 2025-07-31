@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db import models
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from drf_spectacular.utils import extend_schema
+from safe_spectacular import extend_schema
 from .models import VoterRecord, Election, ElectionData, EarlyVoteRecord, VoterEngagement
 from .serializers import (
     VoterRecordSerializer, ElectionSerializer, ElectionDataSerializer,

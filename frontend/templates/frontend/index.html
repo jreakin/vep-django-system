@@ -160,6 +160,9 @@ Authorization: Token your-token-here</code></pre>
             </div>
             <div class="text-center mt-4">
                 <a href="/api/docs/" class="btn btn-primary btn-lg">View Complete API Documentation</a>
+                {% if request.user.is_staff %}
+                <a href="/debug/schema-test/" class="btn btn-outline-secondary btn-lg ms-2">Debug Schema Issues</a>
+                {% endif %}
             </div>
         </div>
     </section>

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema
+from safe_spectacular import extend_schema
 from .serializers import PhoneRegistrationSerializer, SendPINSerializer, VerifyPINSerializer
 from .services import AuthenticationService
 import logging

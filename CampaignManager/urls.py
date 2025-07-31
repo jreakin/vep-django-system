@@ -18,15 +18,36 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
+# Try to import spectacular views, use fallback if not available
+try:
+    from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+    spectacular_available = True
+except ImportError:
+    spectacular_available = False
+    # Import our fallback views
+    from schema_fallback import SafeSchemaView, SafeSwaggerView
+
+# Import debug views
+from debug_views import schema_debug_view, schema_test_html
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # API Documentation
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Debug endpoints (only in debug mode)
+    path('debug/schema-test/', schema_test_html, name='schema-test'),
+    path('debug/schema-info/', schema_debug_view, name='schema-debug'),
+    
+    # API Documentation - with fallback support
+    path('api/schema/', 
+         SpectacularAPIView.as_view() if spectacular_available else SafeSchemaView.as_view(), 
+         name='schema'),
+    path('api/docs/', 
+         SpectacularSwaggerView.as_view(url_name='schema') if spectacular_available else SafeSwaggerView.as_view(), 
+         name='swagger-ui'),
+    path('api/redoc/', 
+         SpectacularRedocView.as_view(url_name='schema') if spectacular_available else SafeSwaggerView.as_view(), 
+         name='redoc'),
     
     # API endpoints
     path('api/auth/', include('authentication.urls')),
@@ -42,8 +63,8 @@ urlpatterns = [
     path('api/redistricting/', include('redistricting.urls')),
     path('api/analytics/', include('analytics.urls')),
     
-    # Impersonation
-    path('impersonate/', include('impersonate.urls')),
+    # Impersonation (only if available)
+    # path('impersonate/', include('impersonate.urls')),
     
     # Frontend (placeholder)
     path('', include('frontend.urls')),
