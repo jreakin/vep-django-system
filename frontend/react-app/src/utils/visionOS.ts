@@ -21,11 +21,13 @@ export const hasSpatialAPIs = (): boolean => {
 };
 
 // Level of detail states based on distance
-export enum LevelOfDetail {
-  FAR = 'far',      // Show only number/icon
-  MEDIUM = 'medium', // Show basic info
-  CLOSE = 'close'   // Show full details/chart
-}
+export const LevelOfDetail = {
+  FAR: 'far',      // Show only number/icon
+  MEDIUM: 'medium', // Show basic info
+  CLOSE: 'close'   // Show full details/chart
+} as const;
+
+export type LevelOfDetail = typeof LevelOfDetail[keyof typeof LevelOfDetail];
 
 // Spatial widget configuration
 export interface SpatialWidgetConfig {

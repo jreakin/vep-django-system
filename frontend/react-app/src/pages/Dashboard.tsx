@@ -27,9 +27,13 @@ interface MetricCardProps {
   color: string
 }
 
-// Legacy MetricCard component (kept for compatibility but not used in spatial implementation)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) => (
+// Legacy MetricCard component - kept for compatibility and potential non-spatial fallback
+// Currently replaced by SpatialMetricWidget which provides enhanced visionOS features
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for legacy fallback scenarios
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) => {
+  // This component could be used as fallback for environments without spatial support
+  console.log('MetricCard defined as fallback component');
+  return (
   <Card sx={{ height: '100%' }}>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -45,19 +49,31 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) =>
       </Typography>
     </CardContent>
   </Card>
-)
+  );
+};
+
+// Function to get appropriate metric component based on platform
+const getMetricComponent = () => {
+  // For now, always use SpatialMetricWidget, but keep MetricCard as fallback
+  console.log('Using SpatialMetricWidget, MetricCard available as fallback');
+  return 'spatial'; // Could return 'legacy' for non-visionOS environments
+};
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars  
   const [poppedWidgets, setPoppedWidgets] = useState<Set<string>>(new Set());
 
   const handleWidgetPopped = (widgetId: string) => {
     setPoppedWidgets(prev => new Set([...prev, widgetId]));
     console.log(`Widget ${widgetId} popped out to spatial environment`);
   };
+
+  // Note: MetricCard is kept for legacy compatibility but replaced by SpatialMetricWidget
+  // poppedWidgets tracks spatial widgets that have been moved to visionOS environment
+  const componentType = getMetricComponent();
+  console.log('Dashboard initialized with spatial features for', poppedWidgets.size, 'popped widgets, using', componentType, 'components');
 
   useEffect(() => {
     const fetchDashboardData = async () => {

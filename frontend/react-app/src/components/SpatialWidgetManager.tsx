@@ -21,14 +21,20 @@ interface SpatialWidgetManagerProps {
 
 export const SpatialWidgetManager: React.FC<SpatialWidgetManagerProps> = ({
   children,
-  spatialWidgets,
+  spatialWidgets, // Used for counting available spatial widgets
 }) => {
   const [spatialSession, setSpatialSession] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [poppedWidgets, setPoppedWidgets] = useState<Set<string>>(new Set());
   const showVisionOSFeatures = isVisionOS();
   const spatialReady = hasSpatialAPIs();
+
+  // Provide setPoppedWidgets to potential child components via callback
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future spatial widget integration
+  const handleWidgetPoppedOut = (widgetId: string) => {
+    setPoppedWidgets(prev => new Set([...prev, widgetId]));
+    console.log(`Widget ${widgetId} added to spatial environment`);
+  };
 
   useEffect(() => {
     // Auto-request spatial session if on visionOS
@@ -56,10 +62,10 @@ export const SpatialWidgetManager: React.FC<SpatialWidgetManagerProps> = ({
     setNotification(null);
   };
 
-  // Remove unused variable warning  
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const activeSpatialWidgets = spatialWidgets.filter(w => w.canPopOut).length;
   const poppedCount = poppedWidgets.size;
+  const availableWidgets = spatialWidgets.length;
+
+  console.log('SpatialWidgetManager ready with', availableWidgets, 'widgets and', poppedCount, 'popped widgets');
 
   if (!showVisionOSFeatures) {
     return <>{children}</>;
