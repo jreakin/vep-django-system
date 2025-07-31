@@ -38,7 +38,10 @@ import {
   type PaymentMethod
 } from '../../services/billing'
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_fake_key')
+if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+  throw new Error('VITE_STRIPE_PUBLISHABLE_KEY environment variable is not set. Please configure it before running the application.')
+}
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 const AddPaymentMethodForm: React.FC<{ onSuccess: () => void; onCancel: () => void }> = ({
   onSuccess,
