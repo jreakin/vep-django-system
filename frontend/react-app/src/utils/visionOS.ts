@@ -1,7 +1,7 @@
 /**
  * Utility functions for visionOS detection and spatial APIs
  */
-import React from 'react';
+import { ReactNode } from 'react';
 
 // Detection for visionOS Safari
 export const isVisionOS = (): boolean => {
