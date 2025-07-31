@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -7,65 +7,107 @@ import {
   Button,
   Chip,
   Stack,
+  CircularProgress,
+  Alert,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Campaign as CampaignIcon,
   Visibility as ViewIcon,
   Edit as EditIcon,
+  PlayArrow as StartIcon,
+  Pause as PauseIcon,
 } from '@mui/icons-material'
-
-interface Campaign {
-  id: number
-  name: string
-  status: 'draft' | 'active' | 'paused' | 'completed'
-  created_at: string
-  budget: number
-  target_audience_size: number
-}
+import campaignService, { type Campaign } from '../../services/campaign'
 
 const CampaignList: React.FC = () => {
-  // Mock data - in real app this would come from API
-  const campaigns: Campaign[] = [
-    {
-      id: 1,
-      name: 'State Senate Campaign 2024',
-      status: 'active',
-      created_at: '2024-01-15',
-      budget: 50000,
-      target_audience_size: 15000,
-    },
-    {
-      id: 2,
-      name: 'County Commissioner Outreach',
-      status: 'draft',
-      created_at: '2024-01-20',
-      budget: 25000,
-      target_audience_size: 8500,
-    },
-    {
-      id: 3,
-      name: 'Municipal Election Campaign',
-      status: 'completed',
-      created_at: '2023-11-01',
-      budget: 30000,
-      target_audience_size: 12000,
-    },
-  ]
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const campaignData = await campaignService.getCampaigns()
+        setCampaigns(campaignData)
+      } catch (err: any) {
+        console.error('Failed to fetch campaigns:', err)
+        setError(err.response?.data?.error || 'Failed to load campaigns')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCampaigns()
+  }, [])
+
+  const handleStartCampaign = async (campaignId: string) => {
+    try {
+      const updatedCampaign = await campaignService.startCampaign(campaignId)
+      setCampaigns(prev => 
+        prev.map(c => c.id === campaignId ? updatedCampaign : c)
+      )
+    } catch (err: any) {
+      console.error('Failed to start campaign:', err)
+      setError('Failed to start campaign')
+    }
+  }
+
+  const handlePauseCampaign = async (campaignId: string) => {
+    try {
+      const updatedCampaign = await campaignService.pauseCampaign(campaignId)
+      setCampaigns(prev => 
+        prev.map(c => c.id === campaignId ? updatedCampaign : c)
+      )
+    } catch (err: any) {
+      console.error('Failed to pause campaign:', err)
+      setError('Failed to pause campaign')
+    }
+  }
 
   const getStatusColor = (status: Campaign['status']) => {
     switch (status) {
-      case 'active':
+      case 'running':
         return 'success'
       case 'draft':
         return 'warning'
-      case 'paused':
+      case 'scheduled':
         return 'info'
+      case 'paused':
+        return 'warning'
       case 'completed':
         return 'default'
+      case 'cancelled':
+        return 'error'
       default:
         return 'default'
     }
+  }
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={40} />
+        <Typography variant="body1" sx={{ ml: 2 }}>
+          Loading campaigns...
+        </Typography>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Campaigns
+        </Typography>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    )
   }
 
   return (
@@ -118,15 +160,31 @@ const CampaignList: React.FC = () => {
                     Budget:
                   </Typography>
                   <Typography variant="body2">
-                    ${campaign.budget.toLocaleString()}
+                    {campaign.budget ? `$${campaign.budget.toLocaleString()}` : 'Not set'}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">
-                    Target Audience:
+                    Audience:
                   </Typography>
                   <Typography variant="body2">
-                    {campaign.target_audience_size.toLocaleString()}
+                    {campaign.audience_name || 'Not set'}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Platform:
+                  </Typography>
+                  <Typography variant="body2">
+                    {campaign.platform || 'Not set'}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Sent:
+                  </Typography>
+                  <Typography variant="body2">
+                    {campaign.sent_count.toLocaleString()}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -148,14 +206,38 @@ const CampaignList: React.FC = () => {
                 >
                   View
                 </Button>
-                <Button
-                  size="small"
-                  variant="contained"
-                  startIcon={<EditIcon />}
-                  sx={{ flex: 1 }}
-                >
-                  Edit
-                </Button>
+                {campaign.status === 'draft' || campaign.status === 'paused' ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    startIcon={<StartIcon />}
+                    sx={{ flex: 1 }}
+                    onClick={() => handleStartCampaign(campaign.id)}
+                  >
+                    Start
+                  </Button>
+                ) : campaign.status === 'running' ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="warning"
+                    startIcon={<PauseIcon />}
+                    sx={{ flex: 1 }}
+                    onClick={() => handlePauseCampaign(campaign.id)}
+                  >
+                    Pause
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<EditIcon />}
+                    sx={{ flex: 1 }}
+                  >
+                    Edit
+                  </Button>
+                )}
               </Stack>
             </CardContent>
           </Card>
