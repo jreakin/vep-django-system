@@ -11,6 +11,9 @@ import Dashboard from './pages/Dashboard'
 import Login from './pages/auth/Login'
 import CampaignList from './pages/campaigns/CampaignList'
 import VoterData from './pages/voter-data/VoterData'
+import BillingDashboard from './pages/billing/BillingDashboard'
+import PaymentMethods from './pages/billing/PaymentMethods'
+import InvoiceDetail from './pages/billing/InvoiceDetail'
 import './index.css'
 
 // Create Material-UI theme
@@ -72,6 +75,9 @@ const AppContent = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/campaigns" element={<CampaignList />} />
                 <Route path="/voter-data" element={<VoterData />} />
+                <Route path="/billing" element={<BillingDashboard />} />
+                <Route path="/billing/payment-methods" element={<PaymentMethods />} />
+                <Route path="/billing/invoices/:id" element={<InvoiceDetail />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
