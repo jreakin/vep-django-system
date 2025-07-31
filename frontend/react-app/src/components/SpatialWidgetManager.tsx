@@ -30,12 +30,17 @@ export const SpatialWidgetManager: React.FC<SpatialWidgetManagerProps> = ({
   const spatialReady = hasSpatialAPIs();
 
   // Provide setPoppedWidgets to potential child components via callback
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future spatial widget integration
   const handleWidgetPoppedOut = (widgetId: string) => {
     setPoppedWidgets(prev => new Set([...prev, widgetId]));
     console.log(`Widget ${widgetId} added to spatial environment`);
   };
 
+  const childWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { onWidgetPoppedOut: handleWidgetPoppedOut });
+    }
+    return child;
+  });
   useEffect(() => {
     // Auto-request spatial session if on visionOS
     if (showVisionOSFeatures && spatialReady) {
