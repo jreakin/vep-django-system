@@ -315,10 +315,11 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   children,
   className = ''
 }) => {
+  const location = useLocation();
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={window.location.pathname}
+        key={location.pathname}
         className={className}
         variants={fadeInVariants}
         initial="hidden"
