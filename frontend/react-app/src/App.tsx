@@ -8,6 +8,7 @@ import type { RootState } from './store'
 import { useAuthInitialization } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
+import SpatialDemo from './pages/SpatialDemo'
 import Login from './pages/auth/Login'
 import CampaignList from './pages/campaigns/CampaignList'
 import VoterData from './pages/voter-data/VoterData'
@@ -81,6 +82,7 @@ const AppContent = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/spatial-demo" element={<SpatialDemo />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <Layout>
