@@ -62,21 +62,18 @@ class VoterDeduplicationService:
                 'error_details': []
             }
             
-            for start_idx in range(0, len(df), batch_size):
-                end_idx = min(start_idx + batch_size, len(df))
-                batch_df = df.iloc[start_idx:end_idx]
-                
-                batch_results = self._process_batch(batch_df, user, file_upload)
+            for chunk in chunks:
+                chunk_results = self._process_batch(chunk, user, file_upload)
                 
                 # Update results
                 for key in ['processed', 'created', 'updated', 'duplicates', 'errors']:
-                    results[key] += batch_results[key]
-                results['error_details'].extend(batch_results['error_details'])
+                    results[key] += chunk_results[key]
+                results['error_details'].extend(chunk_results['error_details'])
                 
                 # Update progress
-                progress = int((end_idx / len(df)) * 100)
+                progress = int((results['processed'] / results['total']) * 100)
                 file_upload.progress_percent = progress
-                file_upload.records_processed = end_idx
+                file_upload.records_processed = results['processed']
                 file_upload.save()
             
             # Update final results
