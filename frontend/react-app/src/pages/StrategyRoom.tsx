@@ -3,7 +3,6 @@ import { Canvas } from '@react-three/fiber'
 import { XR, createXRStore } from '@react-three/xr'
 import { Box, Typography, Alert, Container, Paper, Button } from '@mui/material'
 import { OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
 
 // WebXR Scene Component
 const StrategyRoomScene: React.FC = () => {
@@ -114,20 +113,9 @@ const StrategyRoom: React.FC = () => {
     }
   }, [])
 
-  // Send position updates for collaboration
-  const sendPositionUpdate = (position: THREE.Vector3, rotation: THREE.Euler) => {
-    if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
-      webSocketRef.current.send(JSON.stringify({
-        type: 'user_position',
-        position: { x: position.x, y: position.y, z: position.z },
-        rotation: { x: rotation.x, y: rotation.y, z: rotation.z }
-      }))
-    }
-  }
-
   const enterVR = async () => {
     try {
-      await xrStore.enter('immersive-vr')
+      await xrStore.enterXR('immersive-vr')
     } catch (error) {
       console.error('Failed to enter VR:', error)
     }
