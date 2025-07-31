@@ -95,8 +95,8 @@ const StrategyRoom: React.FC = () => {
       webSocketRef.current.onclose = () => {
         console.log('Strategy room WebSocket disconnected')
         setIsConnected(false)
-        // Attempt to reconnect after 3 seconds
-        setTimeout(connectWebSocket, 3000)
+        // Attempt to reconnect after the configured timeout
+        setTimeout(connectWebSocket, RECONNECT_TIMEOUT_MS)
       }
       
       webSocketRef.current.onerror = (error) => {
