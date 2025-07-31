@@ -30,6 +30,8 @@ import {
   FormControlLabel,
   Paper,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Add,
@@ -40,7 +42,9 @@ import {
   Map as MapIcon,
   Navigation,
   MyLocation,
+  ThreeDRotation,
 } from '@mui/icons-material';
+import Campaign3DVisualization from './Campaign3DVisualization';
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -81,6 +85,7 @@ interface TerritoryMapProps {
   onTerritoryDelete: (territoryId: string) => void;
   mode: 'view' | 'edit' | 'create';
   onModeChange: (mode: 'view' | 'edit' | 'create') => void;
+  campaignId?: string;  // Added for 3D visualization
 }
 
 // Drawing component to handle territory creation/editing
@@ -200,6 +205,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
   onTerritoryDelete,
   mode,
   onModeChange,
+  campaignId = 'default',
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]); // Center of US
   const [mapZoom, setMapZoom] = useState(4);
@@ -208,6 +214,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationTracking, setLocationTracking] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
 
   // Initialize territory layer visibility
   useEffect(() => {
@@ -312,6 +319,29 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
       <Typography variant="h6" gutterBottom>
         Territory Controls
       </Typography>
+      
+      {/* View Mode Toggle */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Visualization Mode
+        </Typography>
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(e, newMode) => newMode && setViewMode(newMode)}
+          size="small"
+          fullWidth
+        >
+          <ToggleButton value="2d" aria-label="2D Map">
+            <MapIcon sx={{ mr: 1 }} />
+            2D Map
+          </ToggleButton>
+          <ToggleButton value="3d" aria-label="3D Visualization">
+            <ThreeDRotation sx={{ mr: 1 }} />
+            3D Model
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
       
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Button
@@ -429,86 +459,103 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
               <MyLocation />
             </IconButton>
           </Tooltip>
+          <Tooltip title={viewMode === '2d' ? 'Switch to 3D' : 'Switch to 2D'}>
+            <IconButton
+              onClick={() => setViewMode(viewMode === '2d' ? '3d' : '2d')}
+              color={viewMode === '3d' ? 'primary' : 'default'}
+            >
+              {viewMode === '2d' ? <ThreeDRotation /> : <MapIcon />}
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Paper>
 
-      <MapContainer
-        center={mapCenter}
-        zoom={mapZoom}
-        style={{ height: '100%', width: '100%' }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      {/* Conditional rendering based on view mode */}
+      {viewMode === '3d' ? (
+        <Campaign3DVisualization
+          campaignId={campaignId}
+          onToggle2D={() => setViewMode('2d')}
+          show2DFallback={false}
         />
+      ) : (
+        <MapContainer
+          center={mapCenter}
+          zoom={mapZoom}
+          style={{ height: '100%', width: '100%' }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
 
-        <DrawingLayer
-          mode={mode}
-          onDrawCreated={handleDrawCreated}
-          onDrawEdited={handleDrawEdited}
-          onDrawDeleted={handleDrawDeleted}
-        />
+          <DrawingLayer
+            mode={mode}
+            onDrawCreated={handleDrawCreated}
+            onDrawEdited={handleDrawEdited}
+            onDrawDeleted={handleDrawDeleted}
+          />
 
-        <LocationTracker
-          tracking={locationTracking}
-          onLocationFound={setUserLocation}
-        />
+          <LocationTracker
+            tracking={locationTracking}
+            onLocationFound={setUserLocation}
+          />
 
-        {/* Render territories */}
-        {territories
-          .filter(territory => territoryLayers[territory.id])
-          .map((territory) => (
-            <GeoJSON
-              key={territory.id}
-              data={territory.boundary}
-              style={() => getTerritoryStyle(territory)}
-              onEachFeature={(feature, layer) => onEachTerritory(territory, layer)}
-            />
+          {/* Render territories */}
+          {territories
+            .filter(territory => territoryLayers[territory.id])
+            .map((territory) => (
+              <GeoJSON
+                key={territory.id}
+                data={territory.boundary}
+                style={() => getTerritoryStyle(territory)}
+                onEachFeature={(feature, layer) => onEachTerritory(territory, layer)}
+              />
+            ))}
+
+          {/* Render voters */}
+          {showVoters && voters.map((voter) => (
+            <Marker
+              key={voter.id}
+              position={voter.location}
+              icon={createVoterIcon(getMarkerColor(voter.party_affiliation))}
+            >
+              <Popup>
+                <div>
+                  <Typography variant="subtitle2">{voter.name}</Typography>
+                  <Typography variant="body2">{voter.address}</Typography>
+                  {voter.party_affiliation && (
+                    <Typography variant="body2">
+                      <strong>Party:</strong> {voter.party_affiliation}
+                    </Typography>
+                  )}
+                  {voter.contact_history !== undefined && (
+                    <Typography variant="body2">
+                      <strong>Contacts:</strong> {voter.contact_history}
+                    </Typography>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
           ))}
 
-        {/* Render voters */}
-        {showVoters && voters.map((voter) => (
-          <Marker
-            key={voter.id}
-            position={voter.location}
-            icon={createVoterIcon(getMarkerColor(voter.party_affiliation))}
-          >
-            <Popup>
-              <div>
-                <Typography variant="subtitle2">{voter.name}</Typography>
-                <Typography variant="body2">{voter.address}</Typography>
-                {voter.party_affiliation && (
-                  <Typography variant="body2">
-                    <strong>Party:</strong> {voter.party_affiliation}
-                  </Typography>
-                )}
-                {voter.contact_history !== undefined && (
-                  <Typography variant="body2">
-                    <strong>Contacts:</strong> {voter.contact_history}
-                  </Typography>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* User location marker */}
-        {userLocation && (
-          <Marker
-            position={userLocation}
-            icon={L.divIcon({
-              html: `<div style="background-color: #FF5722; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.5);"></div>`,
-              className: 'user-location-marker',
-              iconSize: [22, 22],
-              iconAnchor: [11, 11],
-            })}
-          >
-            <Popup>
-              <Typography variant="body2">Your Location</Typography>
-            </Popup>
-          </Marker>
-        )}
-      </MapContainer>
+          {/* User location marker */}
+          {userLocation && (
+            <Marker
+              position={userLocation}
+              icon={L.divIcon({
+                html: `<div style="background-color: #FF5722; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.5);"></div>`,
+                className: 'user-location-marker',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11],
+              })}
+            >
+              <Popup>
+                <Typography variant="body2">Your Location</Typography>
+              </Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      )}
 
       <Drawer
         anchor="left"
