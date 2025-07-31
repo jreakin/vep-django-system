@@ -15,8 +15,12 @@
     "@hookform/resolvers": "^5.2.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
+    "@react-three/drei": "^10.6.1",
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/xr": "^6.6.20",
     "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.83.0",
+    "@types/three": "^0.178.1",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
@@ -28,6 +32,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.1",
     "recharts": "^3.1.0",
+    "three": "^0.178.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {

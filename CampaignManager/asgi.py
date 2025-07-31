@@ -18,10 +18,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CampaignManager.settings')
 django_asgi_app = get_asgi_application()
 
 # Import consumers after Django setup
-from dashboards.consumers import NotificationConsumer
+from dashboards.consumers import NotificationConsumer, StrategyRoomConsumer
 
 websocket_urlpatterns = [
     re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
+    re_path(r'ws/strategy-room/$', StrategyRoomConsumer.as_asgi()),
 ]
 
 application = ProtocolTypeRouter({

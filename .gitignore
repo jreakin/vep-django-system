@@ -217,6 +217,9 @@ frontend/react-app/npm-debug.log*
 frontend/react-app/yarn-debug.log*
 frontend/react-app/yarn-error.log*
 
+# Test files
+test_webxr_basic.html
+
 # Media files
 media/
 
