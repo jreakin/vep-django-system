@@ -349,6 +349,9 @@ export const subscribeToSessionUpdates = (
   sessionId: string,
   onUpdate: (update: RealTimeSessionUpdate) => void
 ): WebSocket => {
+  if (!/^[a-zA-Z0-9-]+$/.test(sessionId)) {
+    throw new Error('Invalid sessionId format. It must be alphanumeric and may include dashes.');
+  }
   const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}/ws/canvassing/sessions/${sessionId}/`
   const socket = new WebSocket(wsUrl)
 
