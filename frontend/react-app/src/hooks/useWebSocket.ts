@@ -36,7 +36,8 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
 
     try {
       // Use environment variable for WebSocket URL or fallback
-      const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000'
+      const wsUrl = import.meta.env.VITE_WS_BASE_URL || 
+        (import.meta.env.MODE === 'production' ? 'wss://localhost:8000' : 'ws://localhost:8000');
       const ws = new WebSocket(`${wsUrl}/ws/notifications/?token=${token}`)
 
       ws.onopen = () => {
