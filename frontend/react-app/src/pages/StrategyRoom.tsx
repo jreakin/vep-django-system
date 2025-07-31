@@ -55,7 +55,7 @@ const StrategyRoom: React.FC = () => {
     const checkWebXRSupport = async () => {
       if ('xr' in navigator) {
         try {
-          const isSupported = await navigator.xr?.isSessionSupported('immersive-vr')
+          const isSupported = await navigator.xr.isSessionSupported('immersive-vr')
           setIsWebXRSupported(isSupported || false)
         } catch (error) {
           console.warn('WebXR support check failed:', error)
