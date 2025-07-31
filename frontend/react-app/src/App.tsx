@@ -14,6 +14,9 @@ import VoterData from './pages/voter-data/VoterData'
 import BillingDashboard from './pages/billing/BillingDashboard'
 import PaymentMethods from './pages/billing/PaymentMethods'
 import InvoiceDetail from './pages/billing/InvoiceDetail'
+import WalkListManager from './pages/canvassing/WalkListManager'
+import CanvassSessionDashboard from './pages/canvassing/CanvassSessionDashboard'
+import QuestionnaireBuilder from './pages/canvassing/QuestionnaireBuilder'
 import './index.css'
 
 // Create Material-UI theme
@@ -78,6 +81,9 @@ const AppContent = () => {
                 <Route path="/billing" element={<BillingDashboard />} />
                 <Route path="/billing/payment-methods" element={<PaymentMethods />} />
                 <Route path="/billing/invoices/:id" element={<InvoiceDetail />} />
+                <Route path="/canvassing" element={<WalkListManager />} />
+                <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
+                <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
