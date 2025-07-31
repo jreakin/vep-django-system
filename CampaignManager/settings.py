@@ -32,16 +32,23 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # For ASGI/Channels support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',  # GeoDjango support
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
+    'channels',
+    'simple_history',
+    'django_otp',
+    'impersonate',
+    'push_notifications',
     'users',
     'authentication',
     'billing',
@@ -51,6 +58,10 @@ INSTALLED_APPS = [
     'canvassing',
     'campaigns',
     'frontend',
+    'forms',
+    'territories',
+    'redistricting',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -60,6 +71,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',  # MFA support
+    'simple_history.middleware.HistoryRequestMiddleware',  # Audit logging
+    'impersonate.middleware.ImpersonateMiddleware',  # User impersonation
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -83,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'CampaignManager.wsgi.application'
+ASGI_APPLICATION = 'CampaignManager.asgi.application'
 
 
 # Database
@@ -92,10 +107,10 @@ WSGI_APPLICATION = 'CampaignManager.wsgi.application'
 DATABASE_URL = config('DATABASE_URL', default='')
 
 if DATABASE_URL and DATABASE_URL.startswith('postgresql'):
-    # Production PostgreSQL/Supabase configuration
+    # Production PostgreSQL/PostGIS configuration
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',  # PostGIS for spatial support
             'NAME': config('DB_NAME', default='campaignmanager'),
             'USER': config('DB_USER', default='user'),
             'PASSWORD': config('DB_PASSWORD', default='password'),
@@ -104,10 +119,10 @@ if DATABASE_URL and DATABASE_URL.startswith('postgresql'):
         }
     }
 else:
-    # Development SQLite configuration
+    # Development SpatiaLite configuration
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'django.contrib.gis.db.backends.spatialite',  # SpatiaLite for spatial support
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
@@ -243,3 +258,100 @@ CORS_ALLOW_CREDENTIALS = True
 # Allow CORS for development
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+
+# Channels/WebSocket Configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [config('REDIS_URL', default='redis://localhost:6379')],
+        },
+    },
+}
+
+# Celery Configuration for async tasks
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379')
+CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Push Notifications Configuration
+PUSH_NOTIFICATIONS_SETTINGS = {
+    'FCM_API_KEY': config('FCM_API_KEY', default=''),
+    'APNS_CERTIFICATE': config('APNS_CERTIFICATE', default=''),
+    'APNS_TOPIC': config('APNS_TOPIC', default=''),
+}
+
+# Audit Logging Configuration
+SIMPLE_HISTORY_HISTORY_ID_USE_UUID = True
+SIMPLE_HISTORY_EDIT_REVERT = True
+
+# MFA/OTP Configuration
+OTP_TOTP_ISSUER = 'CampaignManager'
+OTP_LOGIN_URL = '/auth/otp/login/'
+
+# Impersonation Configuration
+IMPERSONATE = {
+    'REQUIRE_SUPERUSER': False,
+    'REDIRECT_URL': '/admin/',
+    'PAGINATE_COUNT': 20,
+    'DISABLE_LOGGING': False,
+}
+
+# File Upload Configuration
+DATA_UPLOAD_MAX_MEMORY_SIZE = config('DATA_UPLOAD_MAX_MEMORY_SIZE', default=104857600, cast=int)  # 100MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = config('FILE_UPLOAD_MAX_MEMORY_SIZE', default=104857600, cast=int)  # 100MB
+
+# Analytics & AI Configuration
+PYDANTIC_AI_MODEL = config('PYDANTIC_AI_MODEL', default='llama3.2:3b')
+OLLAMA_URL = config('OLLAMA_URL', default='http://localhost:11434')
+
+# Data Retention Policies (in days)
+DATA_RETENTION_POLICIES = {
+    'audit_logs': config('AUDIT_LOG_RETENTION_DAYS', default=365, cast=int),
+    'notifications': config('NOTIFICATION_RETENTION_DAYS', default=90, cast=int),
+    'file_uploads': config('FILE_UPLOAD_RETENTION_DAYS', default=180, cast=int),
+}
+
+# Security Configuration
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs/django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'canvassing': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

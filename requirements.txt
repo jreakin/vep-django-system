@@ -17,3 +17,43 @@ openpyxl==3.1.5
 email-validator==2.2.0
 geopy==2.4.1
 django-cors-headers==4.3.1
+
+# New packages for enterprise features
+# Real-time & WebSockets
+channels==4.1.0
+channels-redis==4.2.0
+daphne==4.1.2
+
+# Audit logging & change tracking
+django-simple-history==3.4.0
+
+# GIS/Mapping support
+geopandas==1.0.1
+shapely==2.0.6
+fiona==1.10.1
+
+# Redistricting & geographic analysis
+gerrychain==0.2.22
+maup==2.0.1
+
+# AI/NLP for analytics
+pydantic-ai==0.0.13
+ollama==0.4.4
+
+# Security & MFA
+django-otp==1.5.4
+django-two-factor-auth==1.17.0
+qrcode==8.0
+
+# Impersonation system
+django-impersonate==1.9.4
+
+# Push notifications
+django-push-notifications==3.1.0
+pyfcm==1.5.4
+apns2==0.7.2
+
+# Additional utilities
+django-flexible-subscriptions==0.16.0
+python-magic==0.4.27
+pillow==10.4.0
