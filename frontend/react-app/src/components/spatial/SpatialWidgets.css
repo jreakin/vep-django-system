@@ -1,0 +1,271 @@
+/* Spatial Widget Styles for visionOS */
+
+.spatial-metric-widget {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Spatial Active State */
+.spatial-metric-widget.spatial-active {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.spatial-metric-widget.spatial-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(25, 118, 210, 0.1) 0%, 
+    rgba(76, 175, 80, 0.1) 25%, 
+    rgba(255, 152, 0, 0.1) 50%, 
+    rgba(156, 39, 176, 0.1) 75%, 
+    rgba(25, 118, 210, 0.1) 100%);
+  animation: spatialGlow 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes spatialGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Level of Detail Styles */
+
+/* Far View - Minimal information, just the key metric */
+.spatial-metric-widget.lod-far {
+  min-height: 120px;
+  max-height: 150px;
+}
+
+.spatial-metric-widget.lod-far .MuiCardContent-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px !important;
+}
+
+.spatial-metric-widget.lod-far .MuiTypography-h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Mid View - Icon, title, and value */
+.spatial-metric-widget.lod-mid {
+  min-height: 200px;
+  max-height: 250px;
+}
+
+.spatial-metric-widget.lod-mid .MuiCardContent-root {
+  padding: 20px !important;
+}
+
+.spatial-metric-widget.lod-mid .MuiTypography-h2 {
+  font-size: 3rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Near View - Full details with additional data */
+.spatial-metric-widget.lod-near {
+  min-height: 300px;
+  max-height: 400px;
+}
+
+.spatial-metric-widget.lod-near .MuiCardContent-root {
+  padding: 24px !important;
+}
+
+.spatial-metric-widget.lod-near .MuiTypography-h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Widget-specific styling */
+
+/* Funds Raised Widget */
+.funds-raised-widget {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+}
+
+.funds-raised-widget.spatial-active {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+}
+
+/* Voter Contacts Widget */
+.voter-contacts-widget {
+  background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
+}
+
+.voter-contacts-widget.spatial-active {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(3, 169, 244, 0.1) 100%);
+}
+
+/* Total Voters Widget */
+.total-voters-widget {
+  background: linear-gradient(135deg, #fff3e0 0%, #fef7ed 100%);
+}
+
+.total-voters-widget.spatial-active {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 183, 77, 0.1) 100%);
+}
+
+/* Charts Created Widget */
+.charts-created-widget {
+  background: linear-gradient(135deg, #f3e5f5 0%, #fce4ec 100%);
+}
+
+.charts-created-widget.spatial-active {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(233, 30, 99, 0.1) 100%);
+}
+
+/* Spatial Controls */
+.spatial-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.spatial-metric-widget:hover .spatial-controls,
+.spatial-metric-widget.lod-near .spatial-controls {
+  opacity: 1;
+}
+
+.spatial-controls .MuiIconButton-root {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.spatial-controls .MuiIconButton-root:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Spatial Indicator */
+.spatial-indicator {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.spatial-metric-widget.spatial-active .spatial-indicator {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-width: 768px) {
+  .spatial-metric-widget.lod-far .MuiTypography-h3 {
+    font-size: 2rem;
+  }
+  
+  .spatial-metric-widget.lod-mid .MuiTypography-h2 {
+    font-size: 2.5rem;
+  }
+  
+  .spatial-metric-widget.lod-near .MuiTypography-h1 {
+    font-size: 3rem;
+  }
+}
+
+/* Animation for level transitions */
+.spatial-metric-widget {
+  animation: none;
+}
+
+.spatial-metric-widget.lod-transition {
+  animation: lodTransition 0.4s ease-in-out;
+}
+
+@keyframes lodTransition {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Accessibility improvements */
+.spatial-metric-widget:focus-within {
+  outline: 2px solid rgba(25, 118, 210, 0.5);
+  outline-offset: 2px;
+}
+
+.spatial-controls .MuiIconButton-root:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .spatial-metric-widget.spatial-active {
+    border: 3px solid currentColor;
+    background: transparent;
+  }
+  
+  .spatial-metric-widget.spatial-active::before {
+    display: none;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .spatial-metric-widget,
+  .spatial-controls .MuiIconButton-root,
+  .spatial-indicator {
+    transition: none;
+  }
+  
+  .spatial-metric-widget.spatial-active::before {
+    animation: none;
+  }
+  
+  @keyframes spatialGlow {
+    0%, 100% { opacity: 0.4; }
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .spatial-metric-widget.spatial-active {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .spatial-controls .MuiIconButton-root {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  .spatial-controls .MuiIconButton-root:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
