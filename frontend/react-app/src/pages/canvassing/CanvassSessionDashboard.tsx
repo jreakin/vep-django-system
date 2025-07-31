@@ -105,9 +105,9 @@ const CanvassSessionDashboard: React.FC = () => {
   }
 
   const calculateProgress = (session: CanvassSession) => {
-    if (session.total_responses === 0) return 0
-    // This is a simplified calculation - you might want to calculate based on total voters in walk list
-    return Math.min((session.total_responses / 100) * 100, 100) // Assuming 100 voters max for demo
+    if (session.total_responses === 0 || !session.total_voters) return 0
+    // Calculate progress based on the total voters in the walk list
+    return Math.min((session.total_responses / session.total_voters) * 100, 100)
   }
 
   const getSessionDuration = (session: CanvassSession) => {
