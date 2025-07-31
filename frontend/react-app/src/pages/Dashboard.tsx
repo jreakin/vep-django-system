@@ -18,7 +18,7 @@ import {
 import dashboardService, { type DashboardStats } from '../services/dashboard'
 import SpatialMetricWidget from '../components/SpatialMetricWidget'
 import SpatialWidgetManager from '../components/SpatialWidgetManager'
-import { SpatialWidgetConfig } from '../utils/visionOS'
+import { type SpatialWidgetConfig } from '../utils/visionOS'
 
 interface MetricCardProps {
   title: string

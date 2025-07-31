@@ -11,7 +11,7 @@ import {
   isVisionOS,
   hasSpatialAPIs,
   requestSpatialSession,
-  SpatialWidgetConfig,
+  type SpatialWidgetConfig,
 } from '../utils/visionOS';
 
 interface SpatialWidgetManagerProps {

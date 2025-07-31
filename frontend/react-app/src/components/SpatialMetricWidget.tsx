@@ -12,7 +12,7 @@ import { Launch as PopOutIcon } from '@mui/icons-material';
 import {
   isVisionOS,
   LevelOfDetail,
-  SpatialWidgetConfig,
+  type SpatialWidgetConfig,
   createSpatialWidget,
   setupLevelOfDetailListener,
   getCurrentLevelOfDetail,
