@@ -194,15 +194,29 @@ export const exportPlan = async (planId: string, format: string): Promise<PlanEx
 
 // File uploads
 export const uploadShapefile = async (file: File): Promise<{ plan_id: string; message: string }> => {
-  const formData = new FormData()
-  formData.append('file', file)
+  // Define allowed file type and size limit
+  const ALLOWED_FILE_TYPE = 'application/zip';
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  // Validate file type
+  if (file.type !== ALLOWED_FILE_TYPE) {
+    throw new Error('Invalid file type. Only .zip files are allowed.');
+  }
+
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds the maximum limit of 10 MB.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
   
   const response = await api.post('/redistricting/upload/shapefile/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-  })
-  return response.data
+  });
+  return response.data;
 }
 
 export const importPlan = async (file: File, name: string): Promise<RedistrictingPlan> => {
