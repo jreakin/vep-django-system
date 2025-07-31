@@ -10,7 +10,14 @@ def config(key, default=None, cast=None):
         if cast == bool:
             if isinstance(value, bool):
                 return value
-            return str(value).lower() in ('true', '1', 'yes', 'on')
+            truthy_values = {'true', '1', 'yes', 'on'}
+            falsy_values = {'false', '0', 'no', 'off'}
+            value_lower = str(value).strip().lower()
+            if value_lower in truthy_values:
+                return True
+            elif value_lower in falsy_values:
+                return False
+            raise ValueError(f"Invalid boolean value: {value}")
         elif cast == int:
             return int(value)
         elif cast == float:
