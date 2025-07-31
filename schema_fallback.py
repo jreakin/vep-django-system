@@ -146,7 +146,6 @@ class SafeSchemaView(APIView):
             return spectacular_view.get(request)
         except Exception as e:
             # Log the error for debugging
-            import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to generate schema with drf-spectacular: {e}")
             
