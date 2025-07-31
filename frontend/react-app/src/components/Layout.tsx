@@ -55,8 +55,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Voter Data', icon: <PeopleIcon />, path: '/voter-data' },
     { text: 'Canvassing', icon: <AssessmentIcon />, path: '/canvassing' },
+    { text: 'Redistricting', icon: <SettingsIcon />, path: '/redistricting' },
+    { text: 'Territories', icon: <BillingIcon />, path: '/territories' },
     { text: 'Billing', icon: <BillingIcon />, path: '/billing' },
-    { text: 'Integrations', icon: <SettingsIcon />, path: '/integrations' },
+    { text: 'Admin', icon: <SettingsIcon />, path: '/admin/users' },
   ]
 
   const drawer = (

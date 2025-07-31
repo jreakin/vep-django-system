@@ -17,6 +17,9 @@ import InvoiceDetail from './pages/billing/InvoiceDetail'
 import WalkListManager from './pages/canvassing/WalkListManager'
 import CanvassSessionDashboard from './pages/canvassing/CanvassSessionDashboard'
 import QuestionnaireBuilder from './pages/canvassing/QuestionnaireBuilder'
+import PlanManager from './pages/redistricting/PlanManager'
+import TerritoryManager from './pages/territories/TerritoryManager'
+import UserManagement from './pages/admin/UserManagement'
 import './index.css'
 
 // Create Material-UI theme
@@ -84,6 +87,9 @@ const AppContent = () => {
                 <Route path="/canvassing" element={<WalkListManager />} />
                 <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
                 <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
+                <Route path="/redistricting" element={<PlanManager />} />
+                <Route path="/territories" element={<TerritoryManager />} />
+                <Route path="/admin/users" element={<UserManagement />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
