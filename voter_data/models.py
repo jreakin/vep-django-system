@@ -192,8 +192,17 @@ class VoterRecord(models.Model):
         updated_fields = set(kwargs.get('update_fields', []))
         
         # Sync spatial location with lat/lng
+        if self.pk:  # Check if the record already exists in the database
+            previous = VoterRecord.objects.filter(pk=self.pk).only('latitude', 'longitude').first()
+            previous_latitude = previous.latitude if previous else None
+            previous_longitude = previous.longitude if previous else None
+        else:
+            previous_latitude = None
+            previous_longitude = None
+        
         if (self.latitude is not None and self.longitude is not None and
-            (not self.location or self.location.x != self.longitude or self.location.y != self.latitude)):
+            (not self.location or self.location.x != self.longitude or self.location.y != self.latitude) and
+            (self.latitude != previous_latitude or self.longitude != previous_longitude)):
             self.location = Point(self.longitude, self.latitude)
         elif self.location and (not self.latitude or not self.longitude):
             self.latitude = self.location.y
