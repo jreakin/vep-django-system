@@ -1,6 +1,7 @@
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MotionProps, Variants } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 
 // Common animation variants
 export const fadeInVariants: Variants = {

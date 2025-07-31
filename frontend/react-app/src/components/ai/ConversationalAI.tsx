@@ -5,19 +5,13 @@ import {
   CardContent,
   Typography,
   TextField,
-  Button,
   IconButton,
   Stack,
   Chip,
-  Alert,
   CircularProgress,
   Avatar,
   Divider,
   Collapse,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
   Tooltip
 } from '@mui/material'
 import {
@@ -31,8 +25,7 @@ import {
   ContactMail,
   GroupAdd,
   Analytics,
-  Error,
-  ContentCopy
+  Error
 } from '@mui/icons-material'
 
 interface ConversationMessage {
@@ -206,13 +199,14 @@ const ConversationalAI: React.FC<ConversationalAIProps> = ({
             setMessages(prev => [...prev, followUpMessage])
           }
           
-        } catch (error) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
           setMessages(prev => prev.map(msg => 
             msg.id === aiMessage.id 
               ? { 
                   ...msg, 
                   status: 'error',
-                  details: `❌ Error executing command: ${error instanceof Error ? error.message : 'Unknown error'}`
+                  details: `❌ Error executing command: ${errorMessage}`
                 }
               : msg
           ))

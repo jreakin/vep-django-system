@@ -8,7 +8,6 @@ import {
   TrendingUp, 
   Calendar, 
   Database,
-  Settings,
   Palette,
   Sparkles
 } from 'lucide-react'

@@ -1,6 +1,7 @@
 import React, { Suspense, useRef, useState, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Text, Box, Sphere, Html } from '@react-three/drei'
+import { OrbitControls, Text, Box, Html } from '@react-three/drei'
+import './../../three-fiber.d.ts'
 import { 
   Card, 
   CardContent, 
@@ -9,13 +10,11 @@ import {
   Stack,
   Switch,
   FormControlLabel,
-  Slider,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
   Chip,
-  Tooltip,
   CircularProgress
 } from '@mui/material'
 import { Mesh, Vector3, Color } from 'three'

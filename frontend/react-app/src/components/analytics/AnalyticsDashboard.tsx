@@ -375,7 +375,7 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
     const isRefreshing = refreshing.includes(widget.id);
     
     return (
-      <Grid item xs={12} md={widget.width} key={widget.id}>
+      <Grid size={{ xs: 12, md: widget.width }} key={widget.id}>
         <Card sx={{ height: widget.height * 100, position: 'relative' }}>
           <CardContent sx={{ height: '100%', pb: 1 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
@@ -455,7 +455,7 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
         {dashboard.widgets.map(renderWidget)}
         
         {isEditing && (
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card 
               sx={{ 
                 height: 400, 
@@ -694,7 +694,7 @@ const WidgetEditorDialog: React.FC<{
           </FormControl>
           
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 label="Width (Grid Units)"
                 type="number"
@@ -704,7 +704,7 @@ const WidgetEditorDialog: React.FC<{
                 inputProps={{ min: 1, max: 12 }}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 label="Height (Grid Units)"
                 type="number"

@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Sun, Moon, Monitor } from 'lucide-react'
-import { useTheme, type ThemeMode, type ThemeVariant } from '../../contexts/ThemeContext'
+import { useTheme, type ThemeVariant } from '../../contexts/ThemeContext'
 
 // Theme mode toggle component
 interface ThemeToggleProps {
@@ -13,7 +13,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   className = '',
   showLabel = false
 }) => {
-  const { theme, toggleMode, isDark } = useTheme()
+  const { theme, toggleMode } = useTheme()
 
   const getIcon = () => {
     switch (theme.mode) {

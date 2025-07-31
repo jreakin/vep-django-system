@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import * as yup from 'yup';
 import {
   Box,
   Card,
@@ -17,7 +16,6 @@ import {
   Radio,
   RadioGroup,
   Rating,
-  Slider,
   Switch,
   IconButton,
   Accordion,
@@ -25,18 +23,12 @@ import {
   AccordionDetails,
   Stack,
   Chip,
-  Divider,
   Paper,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Tooltip,
   Alert,
 } from '@mui/material';
 import {
@@ -47,13 +39,7 @@ import {
   Preview,
   Save,
   ExpandMore,
-  Visibility,
-  Code,
-  Share,
 } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface FormField {
   id: string;
@@ -146,7 +132,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   const [previewMode, setPreviewMode] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { control, setValue, formState: { errors } } = useForm({
     defaultValues: template,
   });
 
