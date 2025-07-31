@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Campaign Visualization Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #1976d2;
+            color: white;
+            padding: 20px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .visualization-container {
+            height: 500px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .model-viewer {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .fallback {
+            text-align: center;
+            color: #666;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #1565c0;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        .btn-outline:hover {
+            background: #f5f5f5;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .error-box {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+            color: #d32f2f;
+        }
+        .success-box {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+            color: #2e7d32;
+        }
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .demo-data {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 3D Campaign Visualization Demo</h1>
+            <p>Interactive 3D models for political campaign data analysis</p>
+        </div>
+        
+        <div class="content">
+            <div id="browser-support-info" class="info-box">
+                <strong>Browser Detection:</strong> <span id="browser-info">Checking...</span>
+            </div>
+            
+            <div class="controls">
+                <label>
+                    Data Type:
+                    <select id="dataType">
+                        <option value="geographic">Geographic Data</option>
+                        <option value="demographic">Demographics</option>
+                        <option value="turnout">Turnout Prediction</option>
+                    </select>
+                </label>
+                
+                <button class="btn" id="generateBtn" onclick="generateModel()">
+                    🔄 Generate 3D Model
+                </button>
+                
+                <button class="btn btn-outline" id="downloadBtn" onclick="downloadModel()" disabled>
+                    📥 Download .usdz
+                </button>
+                
+                <label>
+                    <input type="checkbox" id="fallbackMode"> Force 2D Fallback
+                </label>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="visualization-container" id="visualizationContainer">
+                <div class="fallback" id="fallbackContent">
+                    <h3>🎲 3D Model Placeholder</h3>
+                    <p>Click "Generate 3D Model" to create an interactive visualization</p>
+                    <p>On Safari/visionOS, this will show an interactive 3D model.<br>
+                       On other browsers, you'll see a 2D fallback visualization.</p>
+                </div>
+            </div>
+            
+            <div id="instructions" style="display: none;">
+                <div class="success-box">
+                    <strong>✅ 3D Model Generated!</strong><br>
+                    <div id="visionos-instructions" style="display: none;">
+                        <strong>visionOS Controls:</strong>
+                        <ul>
+                            <li>Use pinch gestures to zoom in/out</li>
+                            <li>Drag to rotate the model</li>
+                            <li>Tap to select data points</li>
+                            <li>Use the download button to save the .usdz file</li>
+                        </ul>
+                    </div>
+                    <div id="fallback-instructions" style="display: none;">
+                        <strong>2D Fallback Mode:</strong> Your browser doesn't support 3D model viewing, but you can still see the data representation below.
+                    </div>
+                </div>
+            </div>
+            
+            <div id="demo-data" style="display: none;">
+                <h3>📊 Demo Data Generated</h3>
+                <div class="demo-data" id="dataDisplay"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Browser support detection
+        function detectBrowserSupport() {
+            const userAgent = navigator.userAgent;
+            const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+            const isVisionOS = /vision/i.test(userAgent) || /visionos/i.test(userAgent);
+            const supportsModel = 'model' in document.createElement('model');
+            
+            const browserInfo = document.getElementById('browser-info');
+            const supportInfo = document.getElementById('browser-support-info');
+            
+            if (isSafari && supportsModel) {
+                browserInfo.textContent = `Safari detected with <model> element support`;
+                supportInfo.className = 'success-box';
+                return true;
+            } else if (isVisionOS) {
+                browserInfo.textContent = `visionOS detected - 3D models will work!`;
+                supportInfo.className = 'success-box';
+                return true;
+            } else {
+                browserInfo.textContent = `${getBrowserName()} detected - will show 2D fallback`;
+                supportInfo.className = 'info-box';
+                return false;
+            }
+        }
+        
+        function getBrowserName() {
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes('Chrome')) return 'Chrome';
+            if (userAgent.includes('Firefox')) return 'Firefox';
+            if (userAgent.includes('Safari')) return 'Safari';
+            if (userAgent.includes('Edge')) return 'Edge';
+            return 'Unknown Browser';
+        }
+        
+        // Mock API call to generate 3D model
+        async function generateModel() {
+            const dataType = document.getElementById('dataType').value;
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const status = document.getElementById('status');
+            const fallbackMode = document.getElementById('fallbackMode').checked;
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Generating...';
+            status.textContent = 'Generating 3D model from campaign data...';
+            
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Generate mock data based on type
+                const mockData = generateMockData(dataType);
+                document.getElementById('dataDisplay').textContent = JSON.stringify(mockData, null, 2);
+                document.getElementById('demo-data').style.display = 'block';
+                
+                // Show visualization
+                const container = document.getElementById('visualizationContainer');
+                const supportsModel = detectBrowserSupport() && !fallbackMode;
+                
+                if (supportsModel) {
+                    showModelVisualization(mockData, dataType);
+                    document.getElementById('visionos-instructions').style.display = 'block';
+                } else {
+                    show2DFallback(mockData, dataType);
+                    document.getElementById('fallback-instructions').style.display = 'block';
+                }
+                
+                document.getElementById('instructions').style.display = 'block';
+                downloadBtn.disabled = false;
+                status.textContent = `✅ ${dataType} 3D model generated successfully!`;
+                
+            } catch (error) {
+                status.textContent = '❌ Failed to generate 3D model';
+                console.error('Model generation failed:', error);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🔄 Generate 3D Model';
+            }
+        }
+        
+        function generateMockData(dataType) {
+            switch (dataType) {
+                case 'geographic':
+                    return {
+                        type: 'geographic_heatmap',
+                        regions: [
+                            { zip_code: '10001', voter_count: 1250, lat: 40.7505, lng: -73.9934 },
+                            { zip_code: '10002', voter_count: 980, lat: 40.7156, lng: -73.9877 },
+                            { zip_code: '10003', voter_count: 1580, lat: 40.7316, lng: -73.9891 },
+                        ]
+                    };
+                case 'demographic':
+                    return {
+                        type: 'demographic_bars',
+                        categories: [
+                            { name: 'Age 18-25', value: 2340, color: '#FF6B6B' },
+                            { name: 'Age 26-35', value: 3120, color: '#4ECDC4' },
+                            { name: 'Age 36-50', value: 2890, color: '#45B7D1' },
+                        ]
+                    };
+                case 'turnout':
+                    return {
+                        type: 'turnout_prediction',
+                        precincts: [
+                            { id: 'P001', predicted_turnout: 0.78, confidence: 0.85 },
+                            { id: 'P002', predicted_turnout: 0.65, confidence: 0.72 },
+                            { id: 'P003', predicted_turnout: 0.82, confidence: 0.91 },
+                        ]
+                    };
+                default:
+                    return { type: 'generic', data: [] };
+            }
+        }
+        
+        function showModelVisualization(data, dataType) {
+            const container = document.getElementById('visualizationContainer');
+            
+            // Create a mock USDZ blob URL (in real implementation, this comes from backend)
+            const mockUSDZUrl = `data:model/vnd.usdz+zip;base64,${btoa('Mock USDZ content for ' + dataType)}`;
+            
+            container.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🎲</div>
+                        <h3>Interactive 3D Model Active</h3>
+                        <p>On Safari/visionOS, this would be a fully interactive 3D model</p>
+                        <p><strong>Data Type:</strong> ${dataType}</p>
+                        <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 4px; font-size: 12px;">
+                            📱 Use gestures to interact
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Store the mock URL for download
+            container.dataset.modelUrl = mockUSDZUrl;
+        }
+        
+        function show2DFallback(data, dataType) {
+            const container = document.getElementById('visualizationContainer');
+            
+            let fallbackHTML = '';
+            
+            switch (dataType) {
+                case 'geographic':
+                    fallbackHTML = `
+                        <div style="width: 100%; height: 100%; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <h3 style="text-align: center; margin-bottom: 20px;">📍 Geographic Distribution (2D Fallback)</h3>
+                            <div style="display: flex; justify-content: space-around; align-items: end; height: 200px;">
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 125px; background: #FF6B6B; margin: 0 auto 5px;"></div>
+                                    <small>ZIP 10001<br>1,250 voters</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 98px; background: #4ECDC4; margin: 0 auto 5px;"></div>
+                                    <small>ZIP 10002<br>980 voters</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 158px; background: #45B7D1; margin: 0 auto 5px;"></div>
+                                    <small>ZIP 10003<br>1,580 voters</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'demographic':
+                    fallbackHTML = `
+                        <div style="width: 100%; height: 100%; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <h3 style="text-align: center; margin-bottom: 20px;">👥 Demographics (2D Fallback)</h3>
+                            <div style="display: flex; justify-content: space-around; align-items: end; height: 200px;">
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 117px; background: #FF6B6B; margin: 0 auto 5px;"></div>
+                                    <small>18-25<br>2,340</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 156px; background: #4ECDC4; margin: 0 auto 5px;"></div>
+                                    <small>26-35<br>3,120</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 144px; background: #45B7D1; margin: 0 auto 5px;"></div>
+                                    <small>36-50<br>2,890</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'turnout':
+                    fallbackHTML = `
+                        <div style="width: 100%; height: 100%; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                            <h3 style="text-align: center; margin-bottom: 20px;">📊 Turnout Prediction (2D Fallback)</h3>
+                            <div style="display: flex; justify-content: space-around; align-items: end; height: 200px;">
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 156px; background: #4CAF50; margin: 0 auto 5px; border-radius: 50% 50% 0 0;"></div>
+                                    <small>P001<br>78% (85% conf)</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 130px; background: #FF9800; margin: 0 auto 5px; border-radius: 50% 50% 0 0;"></div>
+                                    <small>P002<br>65% (72% conf)</small>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 40px; height: 164px; background: #4CAF50; margin: 0 auto 5px; border-radius: 50% 50% 0 0;"></div>
+                                    <small>P003<br>82% (91% conf)</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            container.innerHTML = fallbackHTML;
+        }
+        
+        function downloadModel() {
+            const container = document.getElementById('visualizationContainer');
+            const modelUrl = container.dataset.modelUrl;
+            const dataType = document.getElementById('dataType').value;
+            
+            if (modelUrl) {
+                // Create download link
+                const link = document.createElement('a');
+                link.href = modelUrl;
+                link.download = `campaign_demo_${dataType}_3d_model.usdz`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                document.getElementById('status').textContent = '📥 Model download started!';
+            } else {
+                document.getElementById('status').textContent = '❌ No model available for download';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            detectBrowserSupport();
+            
+            // Add event listener for fallback mode toggle
+            document.getElementById('fallbackMode').addEventListener('change', function() {
+                if (document.getElementById('demo-data').style.display !== 'none') {
+                    // Regenerate if we already have data
+                    generateModel();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
