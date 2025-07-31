@@ -19,7 +19,6 @@ import {
   CircularProgress
 } from '@mui/material'
 import { Mesh, Vector3, Color } from 'three'
-import * as THREE from 'three'
 
 interface GeographicDataPoint {
   id: string
