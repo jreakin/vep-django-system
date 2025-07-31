@@ -88,9 +88,31 @@ const InvoiceDetail: React.FC = () => {
     return invoice.line_items.reduce((sum, item) => sum + item.total, 0)
   }
 
-  const handleDownload = () => {
-    // This would typically generate and download a PDF
-    window.print()
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(`/api/billing/invoices/${invoice.id}/pdf/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      })
+      
+      if (!response.ok) throw new Error('Download failed')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice_${invoice.invoice_number}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to download invoice:', error)
+      // Fallback to print
+      window.print()
+    }
   }
 
   if (isLoading) {

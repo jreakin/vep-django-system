@@ -84,6 +84,34 @@ export interface GPSLocation {
   latitude: number
   longitude: number
   accuracy?: number
+  timestamp: number
+}
+
+export interface VolunteerAssignment {
+  id: string
+  volunteer: {
+    id: string
+    email: string
+    first_name: string
+    last_name: string
+  }
+  walk_list: string
+  assigned_date: string
+  status: 'assigned' | 'accepted' | 'rejected' | 'completed'
+}
+
+export interface RealTimeSessionUpdate {
+  session_id: string
+  volunteer_id: string
+  status: 'active' | 'paused' | 'completed'
+  current_location?: GPSLocation
+  progress: {
+    total_voters: number
+    contacted: number
+    remaining: number
+    percentage: number
+  }
+  timestamp: string
 }
 
 // Walk List Management
@@ -192,11 +220,17 @@ export const verifyGPSLocation = async (
 }
 
 // Get current GPS location
-export const getCurrentLocation = (): Promise<GPSLocation> => {
+export const getCurrentLocation = (options?: PositionOptions): Promise<GPSLocation> => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by this browser'))
       return
+    }
+
+    const defaultOptions: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -204,17 +238,26 @@ export const getCurrentLocation = (): Promise<GPSLocation> => {
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp
         })
       },
       (error) => {
-        reject(new Error(`GPS error: ${error.message}`))
+        let errorMessage = 'GPS error occurred'
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'GPS permission denied'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'GPS position unavailable'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'GPS timeout'
+            break
+        }
+        reject(new Error(errorMessage))
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      { ...defaultOptions, ...options }
     )
   })
 }
@@ -222,11 +265,18 @@ export const getCurrentLocation = (): Promise<GPSLocation> => {
 // Watch GPS location
 export const watchLocation = (
   onLocationUpdate: (location: GPSLocation) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  options?: PositionOptions
 ): number => {
   if (!navigator.geolocation) {
     onError(new Error('Geolocation is not supported by this browser'))
     return -1
+  }
+
+  const defaultOptions: PositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 30000,
+    maximumAge: 5000
   }
 
   return navigator.geolocation.watchPosition(
@@ -234,17 +284,26 @@ export const watchLocation = (
       onLocationUpdate({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy
+        accuracy: position.coords.accuracy,
+        timestamp: position.timestamp
       })
     },
     (error) => {
-      onError(new Error(`GPS error: ${error.message}`))
+      let errorMessage = 'GPS error occurred'
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'GPS permission denied'
+          break
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'GPS position unavailable'
+          break
+        case error.TIMEOUT:
+          errorMessage = 'GPS timeout'
+          break
+      }
+      onError(new Error(errorMessage))
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 30000,
-      maximumAge: 5000
-    }
+    { ...defaultOptions, ...options }
   )
 }
 
@@ -252,4 +311,70 @@ export const stopWatchingLocation = (watchId: number): void => {
   if (navigator.geolocation && watchId !== -1) {
     navigator.geolocation.clearWatch(watchId)
   }
+}
+
+// Volunteer Assignment Management
+export const getVolunteerAssignments = async (): Promise<VolunteerAssignment[]> => {
+  const response = await api.get('/canvassing/assignments/')
+  return response.data
+}
+
+export const assignVolunteerToWalkList = async (walkListId: string, volunteerId: string): Promise<VolunteerAssignment> => {
+  const response = await api.post('/canvassing/assignments/', {
+    walk_list: walkListId,
+    volunteer: volunteerId
+  })
+  return response.data
+}
+
+export const reassignWalkList = async (assignmentId: string, newVolunteerId: string): Promise<VolunteerAssignment> => {
+  const response = await api.patch(`/canvassing/assignments/${assignmentId}/`, {
+    volunteer: newVolunteerId
+  })
+  return response.data
+}
+
+export const acceptAssignment = async (assignmentId: string): Promise<VolunteerAssignment> => {
+  const response = await api.post(`/canvassing/assignments/${assignmentId}/accept/`)
+  return response.data
+}
+
+export const rejectAssignment = async (assignmentId: string, reason?: string): Promise<VolunteerAssignment> => {
+  const response = await api.post(`/canvassing/assignments/${assignmentId}/reject/`, { reason })
+  return response.data
+}
+
+// Real-time Progress Monitoring
+export const subscribeToSessionUpdates = (
+  sessionId: string,
+  onUpdate: (update: RealTimeSessionUpdate) => void
+): WebSocket => {
+  const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}/ws/canvassing/sessions/${sessionId}/`
+  const socket = new WebSocket(wsUrl)
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    onUpdate(data)
+  }
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+
+  return socket
+}
+
+export const updateSessionProgress = async (sessionId: string, progressData: Partial<RealTimeSessionUpdate>): Promise<void> => {
+  await api.post(`/canvassing/sessions/${sessionId}/progress/`, progressData)
+}
+
+// Bulk Operations
+export const bulkAssignVolunteers = async (assignments: Array<{walk_list_id: string, volunteer_id: string}>): Promise<VolunteerAssignment[]> => {
+  const response = await api.post('/canvassing/assignments/bulk/', { assignments })
+  return response.data
+}
+
+export const getAvailableVolunteers = async (): Promise<Array<{id: string, email: string, first_name: string, last_name: string}>> => {
+  const response = await api.get('/canvassing/volunteers/available/')
+  return response.data
 }

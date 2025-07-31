@@ -48,6 +48,8 @@ const AddPaymentMethodForm: React.FC<{ onSuccess: () => void; onCancel: () => vo
   const elements = useElements()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -74,16 +76,60 @@ const AddPaymentMethodForm: React.FC<{ onSuccess: () => void; onCancel: () => vo
       })
 
       if (methodError) {
-        setError(methodError.message || 'Failed to create payment method')
+        handlePaymentError(methodError)
         setLoading(false)
         return
       }
 
       await addPaymentMethod(paymentMethod.id)
       onSuccess()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add payment method')
+    } catch (err: any) {
+      handleApiError(err)
       setLoading(false)
+    }
+  }
+
+  const handlePaymentError = (error: any) => {
+    switch (error.code) {
+      case 'card_declined':
+        setError('Your card was declined. Please try a different payment method.')
+        break
+      case 'expired_card':
+        setError('Your card has expired. Please use a different card.')
+        break
+      case 'incorrect_cvc':
+        setError('Your card security code is incorrect.')
+        break
+      case 'processing_error':
+        setError('An error occurred processing your card. Please try again.')
+        break
+      case 'rate_limit':
+        setError('Too many requests. Please wait a moment and try again.')
+        break
+      default:
+        setError(error.message || 'An unexpected error occurred.')
+    }
+  }
+
+  const handleApiError = (err: any) => {
+    if (err.response?.status === 429) {
+      setError('Too many requests. Please wait before trying again.')
+    } else if (err.response?.status >= 500) {
+      setError('Server error. Please try again later.')
+    } else if (err.response?.data?.detail) {
+      setError(err.response.data.detail)
+    } else {
+      setError('Failed to add payment method. Please try again.')
+    }
+  }
+
+  const handleRetry = () => {
+    if (retryCount < maxRetries) {
+      setRetryCount(prev => prev + 1)
+      setError(null)
+      handleSubmit(new Event('submit') as any)
+    } else {
+      setError('Maximum retry attempts reached. Please try again later.')
     }
   }
 
@@ -115,8 +161,23 @@ const AddPaymentMethodForm: React.FC<{ onSuccess: () => void; onCancel: () => vo
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ mb: 2 }}
+            action={
+              retryCount < maxRetries && (
+                <Button color="inherit" size="small" onClick={handleRetry}>
+                  Retry
+                </Button>
+              )
+            }
+          >
             {error}
+            {retryCount > 0 && (
+              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                Attempt {retryCount + 1} of {maxRetries + 1}
+              </Typography>
+            )}
           </Alert>
         )}
 

@@ -48,6 +48,45 @@ export interface CreatePaymentData {
   amount: number
 }
 
+export interface AdminInvoice extends Invoice {
+  user: {
+    id: string
+    email: string
+    organization?: string
+    first_name: string
+    last_name: string
+  }
+}
+
+export interface AdminInvoiceFilters {
+  page?: number
+  page_size?: number
+  search?: string
+  status?: string
+  date_from?: string
+  date_to?: string
+  user_id?: string
+  min_amount?: string
+  max_amount?: string
+}
+
+export interface AdminInvoiceResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: AdminInvoice[]
+}
+
+export interface ExportOptions {
+  format: 'csv' | 'pdf' | 'excel'
+  type: 'invoices' | 'payments' | 'usage_reports' | 'billing_summary'
+  start_date: string
+  end_date: string
+  include_line_items: boolean
+  include_payment_details: boolean
+  filter_status?: string
+}
+
 // Invoice management
 export const getInvoices = async (): Promise<Invoice[]> => {
   const response = await api.get('/billing/invoices/')
@@ -105,5 +144,47 @@ export const getUsageMetrics = async (period?: string): Promise<UsageMetrics> =>
 
 export const getOverdueInvoices = async (): Promise<Invoice[]> => {
   const response = await api.get('/billing/invoices/overdue/')
+  return response.data
+}
+
+// Admin functions
+export const getAdminInvoices = async (filters: AdminInvoiceFilters): Promise<AdminInvoiceResponse> => {
+  const params = new URLSearchParams()
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      params.append(key, value.toString())
+    }
+  })
+  
+  const response = await api.get(`/admin/billing/invoices/?${params.toString()}`)
+  return response.data
+}
+
+export const sendInvoiceReminder = async (invoiceId: string): Promise<void> => {
+  await api.post(`/admin/billing/invoices/${invoiceId}/send-reminder/`)
+}
+
+export const exportBillingData = async (options: ExportOptions): Promise<Blob> => {
+  const response = await api.post('/admin/billing/export/', options, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+// Enhanced payment error handling
+export const retryPayment = async (invoiceId: string, paymentMethodId?: string): Promise<any> => {
+  const response = await api.post(`/billing/payments/${invoiceId}/retry/`, {
+    payment_method_id: paymentMethodId
+  })
+  return response.data
+}
+
+export const handlePaymentDispute = async (paymentId: string, reason: string): Promise<void> => {
+  await api.post(`/billing/payments/${paymentId}/dispute/`, { reason })
+}
+
+export const updatePaymentMethod = async (id: string, data: Partial<PaymentMethod>): Promise<PaymentMethod> => {
+  const response = await api.patch(`/billing/payment-methods/${id}/`, data)
   return response.data
 }
