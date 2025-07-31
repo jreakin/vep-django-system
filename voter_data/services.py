@@ -36,7 +36,7 @@ class VoterDeduplicationService:
         
         # Create hash of concatenated normalized values
         key_string = '|'.join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.sha256(key_string.encode()).hexdigest()
     
     def process_csv_upload(self, file_upload: FileUpload, user: User) -> Dict:
         """Process a CSV file upload with deduplication."""
