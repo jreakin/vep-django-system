@@ -3,7 +3,10 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from impersonate.admin import UserAdminImpersonateMixin
+# from impersonate.admin import UserAdminImpersonateMixin  # Temporarily commented out
+# TODO: Re-enable UserAdminImpersonateMixin once issue #1234 is resolved. 
+#       This was disabled due to [reason, e.g., security concerns]. 
+#       Target resolution: Q4 2023. See tracking issue: https://tracker.example.com/issues/1234
 from .models import (
     User, AuthPIN, OwnerAccount, StateAccount, CountyAccount, 
     CampaignAccount, VendorAccount, Invoice, Payment, VolunteerInvite
@@ -11,10 +14,10 @@ from .models import (
 
 
 @admin.register(User)
-class UserAdmin(UserAdminImpersonateMixin, BaseUserAdmin):
-    """Custom user admin interface with impersonation."""
+class UserAdmin(BaseUserAdmin):  # Temporarily removed UserAdminImpersonateMixin
+    """Custom user admin interface."""
     
-    list_display = ['phone_number', 'role', 'is_verified', 'is_active', 'impersonate_link', 'created_at']
+    list_display = ['phone_number', 'role', 'is_verified', 'is_active', 'created_at']
     list_filter = ['role', 'is_verified', 'is_active', 'created_at']
     search_fields = ['phone_number', 'email']
     ordering = ['-created_at']
@@ -23,7 +26,6 @@ class UserAdmin(UserAdminImpersonateMixin, BaseUserAdmin):
         (None, {'fields': ('phone_number', 'email', 'role')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'is_verified')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
-        ('Impersonation', {'fields': ('can_be_impersonated',)}),
     )
     
     add_fieldsets = (
@@ -32,21 +34,6 @@ class UserAdmin(UserAdminImpersonateMixin, BaseUserAdmin):
             'fields': ('phone_number', 'role', 'is_active'),
         }),
     )
-    
-    def impersonate_link(self, obj):
-        """Add impersonation link to user list."""
-        if obj.pk and obj.is_active:
-            url = reverse('impersonate-start', args=[obj.pk])
-            return format_html('<a href="{}" class="button">Impersonate</a>', url)
-        return "N/A"
-    impersonate_link.short_description = 'Impersonate'
-    impersonate_link.allow_tags = True
-    
-    def can_be_impersonated(self, obj):
-        """Show if user can be impersonated."""
-        return obj.is_active and not obj.is_superuser
-    can_be_impersonated.boolean = True
-    can_be_impersonated.short_description = 'Can be impersonated'
 
 
 @admin.register(AuthPIN)

@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
+try:
+    from decouple import config
+except ImportError:
+    from simple_decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,7 +46,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
-    'drf_spectacular',
     'channels',
     'simple_history',
     'django_otp',
@@ -63,6 +65,13 @@ INSTALLED_APPS = [
     'redistricting',
     'analytics',
 ]
+
+# Add drf_spectacular if available
+try:
+    import drf_spectacular
+    INSTALLED_APPS.append('drf_spectacular')
+except ImportError:
+    pass
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -183,16 +192,26 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 30,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-# Spectacular settings for API documentation
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'CampaignManager API',
-    'DESCRIPTION': 'Political Campaign Management System API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-}
+# Try to configure drf-spectacular if available
+try:
+    import drf_spectacular
+    REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
+    
+    # Spectacular settings for API documentation
+    SPECTACULAR_SETTINGS = {
+        'TITLE': 'CampaignManager API',
+        'DESCRIPTION': 'Political Campaign Management System API',
+        'VERSION': '1.0.0',
+        'SERVE_INCLUDE_SCHEMA': False,
+        'COMPONENT_SPLIT_REQUEST': True,
+        'SORT_OPERATIONS': False,
+        'DISABLE_ERRORS_AND_WARNINGS': False,  # Ensure schema generation issues are visible and addressed
+    }
+except ImportError:
+    # drf-spectacular not available, use default schema class
+    pass
 
 # Supabase Configuration
 SUPABASE_URL = config('SUPABASE_URL', default='')

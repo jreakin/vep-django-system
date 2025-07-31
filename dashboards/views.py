@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
-from drf_spectacular.utils import extend_schema
+from safe_spectacular import extend_schema
 from .models import Dashboard, AuditLog, Notification, ChartConfig, FileUpload
 from .serializers import (
     DashboardSerializer, AuditLogSerializer, NotificationSerializer,
