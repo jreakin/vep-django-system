@@ -7,10 +7,10 @@ import { store } from './store/index'
 import type { RootState } from './store'
 import { useAuthInitialization } from './hooks/useAuth'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
+import DashboardOptimized from './pages/DashboardOptimized'
 import Login from './pages/auth/Login'
 import CampaignList from './pages/campaigns/CampaignList'
-import VoterData from './pages/voter-data/VoterData'
+import VoterDataOptimized from './pages/voter-data/VoterDataOptimized'
 import './index.css'
 
 // Create Material-UI theme
@@ -68,10 +68,10 @@ const AppContent = () => {
           <ProtectedRoute>
             <Layout>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/" element={<DashboardOptimized />} />
+                <Route path="/dashboard" element={<DashboardOptimized />} />
                 <Route path="/campaigns" element={<CampaignList />} />
-                <Route path="/voter-data" element={<VoterData />} />
+                <Route path="/voter-data" element={<VoterDataOptimized />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
