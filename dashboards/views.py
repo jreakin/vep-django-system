@@ -465,12 +465,34 @@ def create_preset_charts(request):
 
 
 class ConversationalUIView(APIView):
-    """Conversational UI that handles both chart queries and action commands."""
+    """
+    Conversational UI that processes natural language input to handle chart queries 
+    and action commands.
+    
+    This class provides an endpoint for users to interact with the system using natural 
+    language. It determines whether the input is a chart query or an action command and 
+    delegates the processing to the appropriate handler.
+    
+    Attributes:
+        permission_classes (list): Permissions required to access this view.
+    """
     
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
-        """Process natural language input and execute appropriate action."""
+        """
+        Process natural language input and execute the appropriate action.
+        
+        This method accepts a POST request with a natural language query. It determines 
+        whether the query is an action command or a chart query and processes it accordingly.
+        
+        Args:
+            request (Request): The HTTP request object containing user input.
+        
+        Returns:
+            Response: A JSON response indicating success or failure, along with the 
+            appropriate data or error message.
+        """
         
         query_text = request.data.get('query', '')
         
