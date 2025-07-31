@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
 from simple_history.models import HistoricalRecords
 import uuid
 
@@ -29,6 +31,9 @@ class VoterRecord(models.Model):
     data_source = models.CharField(max_length=100, default='csv_upload')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    
+    # Spatial field for efficient spatial queries
+    location = gis_models.PointField(null=True, blank=True, help_text="Geographic location as Point")
     
     # Enhanced Voter Identification fields
     voter_vuid = models.CharField(max_length=50, blank=True, help_text="Primary voter unique identifier")
@@ -185,6 +190,14 @@ class VoterRecord(models.Model):
     def save(self, *args, **kwargs):
         """Override save to sync between legacy and new fields only when necessary."""
         updated_fields = set(kwargs.get('update_fields', []))
+        
+        # Sync spatial location with lat/lng
+        if (self.latitude is not None and self.longitude is not None and
+            (not self.location or self.location.x != self.longitude or self.location.y != self.latitude)):
+            self.location = Point(self.longitude, self.latitude)
+        elif self.location and (not self.latitude or not self.longitude):
+            self.latitude = self.location.y
+            self.longitude = self.location.x
         
         # Only sync on creation or when explicitly updating related fields
         if not self.pk or updated_fields:
