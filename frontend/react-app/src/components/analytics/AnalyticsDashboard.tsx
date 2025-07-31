@@ -119,6 +119,7 @@ const widgetTypes = [
   { value: 'pie_chart', label: 'Pie Chart', icon: <PieChart /> },
   { value: 'scatter_plot', label: 'Scatter Plot', icon: <BarChart /> },
   { value: 'map', label: 'Map Visualization', icon: <MapIcon /> },
+  { value: '3d_model', label: '3D Model Visualization', icon: <MapIcon /> },
   { value: 'table', label: 'Data Table', icon: <TableChart /> },
   { value: 'metric', label: 'Single Metric', icon: <TrendingUp /> },
 ];
@@ -359,6 +360,15 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
               </tbody>
             </table>
           </Box>
+        );
+
+      case '3d_model':
+        return (
+          <Model3DWidget 
+            widget={widget}
+            cached_data={cached_data}
+            chart_config={chart_config}
+          />
         );
 
       default:
@@ -725,6 +735,202 @@ const WidgetEditorDialog: React.FC<{
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+// 3D Model Widget Component
+const Model3DWidget: React.FC<{
+  widget: AnalyticsWidget;
+  cached_data: any;
+  chart_config: any;
+}> = ({ widget, cached_data, chart_config }) => {
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
+  const [fallbackData, setFallbackData] = useState<any>(null);
+  const [supportsModel, setSupportsModel] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if browser supports <model> element
+    const modelElement = document.createElement('model');
+    const supports3D = 'src' in modelElement && typeof modelElement.src === 'string';
+    setSupportsModel(supports3D);
+
+    // Fetch 3D model URL from backend
+    const fetchModelData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Extract campaign_id from widget configuration or use default
+        const campaignId = chart_config?.campaign_id || 'demo-campaign';
+        const dataType = chart_config?.data_type || 'voter_demographics';
+        const zipCodes = chart_config?.zip_codes || [];
+
+        const queryParams = new URLSearchParams({
+          campaign_id: campaignId,
+          data_type: dataType,
+        });
+
+        zipCodes.forEach((zip: string) => {
+          queryParams.append('zip_codes', zip);
+        });
+
+        const response = await fetch(`/api/analytics/3d-model-url/?${queryParams}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch 3D model data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setModelUrl(data.model_url);
+        setFallbackData(data.fallback_data);
+      } catch (err: any) {
+        console.error('Failed to fetch 3D model data:', err);
+        setError(err.message || 'Failed to load 3D model');
+        
+        // Use cached data as fallback
+        if (cached_data && cached_data.regions) {
+          setFallbackData(cached_data);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModelData();
+  }, [chart_config, cached_data]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <CircularProgress size={40} />
+        <Typography variant="body2" sx={{ ml: 2 }}>
+          Loading 3D model...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error && !fallbackData) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <Alert severity="error">
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Render 3D model for supported browsers (visionOS Safari)
+  if (supportsModel && modelUrl) {
+    return (
+      <Box sx={{ height: '100%', width: '100%', position: 'relative' }}>
+        <model
+          src={modelUrl}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          // @ts-ignore - TypeScript doesn't know about model element yet
+          interactive="true"
+          autoplay="true"
+          ar="true"
+          camera-controls="true"
+          loading="eager"
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: 1,
+            fontSize: '0.75rem',
+          }}
+        >
+          3D Model (Interactive)
+        </Box>
+      </Box>
+    );
+  }
+
+  // Fallback for unsupported browsers
+  return (
+    <Box sx={{ height: '100%', width: '100%' }}>
+      {fallbackData && fallbackData.regions ? (
+        <Box sx={{ height: '100%', overflow: 'auto', p: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Voter Demographics by Region
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            3D visualization not supported. Showing data table instead.
+          </Typography>
+          
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+                  Zip Code
+                </th>
+                <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+                  Total Voters
+                </th>
+                <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+                  Democratic
+                </th>
+                <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+                  Republican
+                </th>
+                <th style={{ borderBottom: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>
+                  Independent
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {fallbackData.regions.map((region: any, index: number) => (
+                <tr key={index}>
+                  <td style={{ borderBottom: '1px solid #eee', padding: '8px' }}>
+                    {region.zip_code}
+                  </td>
+                  <td style={{ borderBottom: '1px solid #eee', padding: '8px' }}>
+                    {region.total_voters.toLocaleString()}
+                  </td>
+                  <td style={{ borderBottom: '1px solid #eee', padding: '8px' }}>
+                    {region.democratic.toLocaleString()}
+                  </td>
+                  <td style={{ borderBottom: '1px solid #eee', padding: '8px' }}>
+                    {region.republican.toLocaleString()}
+                  </td>
+                  <td style={{ borderBottom: '1px solid #eee', padding: '8px' }}>
+                    {region.independent.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+            Data generated at: {new Date(fallbackData.generated_at).toLocaleString()}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <Typography variant="body2" color="text.secondary">
+            No 3D model data available
+          </Typography>
+        </Box>
+      )}
+    </Box>
   );
 };
 
