@@ -142,6 +142,7 @@ class AnalyticsWidget(models.Model):
         ('pie_chart', 'Pie Chart'),
         ('scatter_plot', 'Scatter Plot'),
         ('map', 'Map Visualization'),
+        ('3d_model', '3D Model Visualization'),
         ('table', 'Data Table'),
         ('metric', 'Single Metric'),
         ('gauge', 'Gauge Chart'),

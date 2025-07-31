@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.http import HttpResponse
 from django.db import connection
 from django.conf import settings
 from django.utils import timezone
@@ -16,6 +17,9 @@ from .serializers import (
 import json
 import re
 import logging
+import tempfile
+import io
+import struct
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
@@ -684,3 +688,194 @@ def generate_insights(request):
         'generated_at': timezone.now(),
         'data_sources_analyzed': data_sources
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_3d_model(request):
+    """Generate 3D model (.usdz) from campaign data."""
+    
+    campaign_id = request.data.get('campaign_id')
+    data_type = request.data.get('data_type', 'voter_demographics')
+    zip_codes = request.data.get('zip_codes', [])
+    
+    if not campaign_id:
+        return Response(
+            {'error': 'campaign_id is required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        # Generate 3D model data based on campaign demographics
+        model_data = generate_demographic_3d_data(campaign_id, zip_codes, data_type)
+        
+        # Create a simple .usdz file (in production, use proper USD library)
+        usdz_content = create_simple_usdz(model_data)
+        
+        # Return the binary file
+        response = HttpResponse(usdz_content, content_type='model/vnd.usdz+zip')
+        response['Content-Disposition'] = f'attachment; filename="campaign_{campaign_id}_3d_model.usdz"'
+        response['Content-Length'] = len(usdz_content)
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"3D model generation failed: {str(e)}")
+        return Response({
+            'error': f'Failed to generate 3D model: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_3d_model_url(request):
+    """Get URL for 3D model based on query parameters."""
+    
+    campaign_id = request.query_params.get('campaign_id')
+    data_type = request.query_params.get('data_type', 'voter_demographics')
+    zip_codes = request.query_params.getlist('zip_codes')
+    
+    if not campaign_id:
+        return Response(
+            {'error': 'campaign_id is required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Generate URL for the 3D model endpoint
+    model_url = f"/api/analytics/3d-model/?campaign_id={campaign_id}&data_type={data_type}"
+    if zip_codes:
+        zip_codes_param = "&".join([f"zip_codes={zc}" for zc in zip_codes])
+        model_url += f"&{zip_codes_param}"
+    
+    # Also return sample data for 2D fallback
+    fallback_data = generate_demographic_3d_data(campaign_id, zip_codes, data_type)
+    
+    return Response({
+        'model_url': model_url,
+        'fallback_data': fallback_data,
+        'supports_3d': True,
+        'data_type': data_type,
+        'campaign_id': campaign_id
+    })
+
+
+def generate_demographic_3d_data(campaign_id, zip_codes, data_type):
+    """Generate 3D model data from campaign demographics."""
+    
+    # Sample demographic data by zip code
+    # In a real implementation, this would query the actual voter database
+    sample_data = [
+        {
+            'zip_code': '10001',
+            'total_voters': 8500,
+            'democratic': 4250,
+            'republican': 2550,
+            'independent': 1700,
+            'coordinates': {'lat': 40.7589, 'lng': -73.9851},
+            'height': 85,  # Height for 3D visualization (based on voter count)
+        },
+        {
+            'zip_code': '10002',
+            'total_voters': 6200,
+            'democratic': 3720,
+            'republican': 1550,
+            'independent': 930,
+            'coordinates': {'lat': 40.7614, 'lng': -73.9776},
+            'height': 62,
+        },
+        {
+            'zip_code': '10003',
+            'total_voters': 7800,
+            'democratic': 4680,
+            'republican': 1950,
+            'independent': 1170,
+            'coordinates': {'lat': 40.7505, 'lng': -73.9934},
+            'height': 78,
+        },
+        {
+            'zip_code': '10009',
+            'total_voters': 5400,
+            'democratic': 3240,
+            'republican': 1350,
+            'independent': 810,
+            'coordinates': {'lat': 40.7681, 'lng': -73.9778},
+            'height': 54,
+        },
+        {
+            'zip_code': '10011',
+            'total_voters': 9200,
+            'democratic': 5520,
+            'republican': 2300,
+            'independent': 1380,
+            'coordinates': {'lat': 40.7397, 'lng': -74.0022},
+            'height': 92,
+        }
+    ]
+    
+    # Filter by requested zip codes if provided
+    if zip_codes:
+        sample_data = [d for d in sample_data if d['zip_code'] in zip_codes]
+    
+    return {
+        'regions': sample_data,
+        'data_type': data_type,
+        'campaign_id': campaign_id,
+        'total_regions': len(sample_data),
+        'max_height': max(d['height'] for d in sample_data) if sample_data else 0,
+        'generated_at': timezone.now().isoformat()
+    }
+
+
+def create_simple_usdz(model_data):
+    """Create a simple .usdz file with 3D representation of demographic data.
+    
+    Note: This is a simplified implementation. In production, you would use
+    proper USD (Universal Scene Description) libraries like USD-Python or
+    generate proper USDZ files with tools like Reality Composer or Blender.
+    """
+    
+    # Create a minimal USDZ-like structure
+    # For this demo, we'll create a simple binary that represents 3D data
+    
+    regions = model_data.get('regions', [])
+    
+    # Create a simple binary format that represents our 3D data
+    # In reality, this would be a proper USD file in a ZIP container
+    
+    buffer = io.BytesIO()
+    
+    # Write a simple header
+    buffer.write(b'DEMO3D\x00\x00')  # 8 bytes signature
+    buffer.write(struct.pack('<I', len(regions)))  # Number of regions
+    
+    # Write region data
+    for region in regions:
+        # Zip code (16 bytes, null-padded)
+        zip_code_bytes = region['zip_code'].encode('utf-8')[:15] + b'\x00'
+        zip_code_bytes = zip_code_bytes.ljust(16, b'\x00')
+        buffer.write(zip_code_bytes)
+        
+        # Coordinates and height
+        buffer.write(struct.pack('<fff', 
+                               region['coordinates']['lat'], 
+                               region['coordinates']['lng'], 
+                               region['height']))
+        
+        # Demographics
+        buffer.write(struct.pack('<IIII', 
+                               region['total_voters'],
+                               region['democratic'],
+                               region['republican'],
+                               region['independent']))
+    
+    # Add metadata
+    metadata = {
+        'created_at': timezone.now().isoformat(),
+        'data_type': model_data.get('data_type'),
+        'campaign_id': model_data.get('campaign_id')
+    }
+    metadata_json = json.dumps(metadata).encode('utf-8')
+    buffer.write(struct.pack('<I', len(metadata_json)))
+    buffer.write(metadata_json)
+    
+    return buffer.getvalue()
