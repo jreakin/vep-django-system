@@ -214,19 +214,33 @@ const MobileCanvassing: React.FC<MobileCanvassingProps> = ({
     return R * c;
   };
 
-  const isLocationVerified = (): boolean => {
+  const isLocationVerified = async (): Promise<boolean> => {
     if (!walkList.require_gps_verification || !currentLocation || !currentVoter) {
       return !walkList.require_gps_verification; // If GPS not required, consider it verified
     }
 
-    const distance = calculateDistance(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      currentVoter.location[0],
-      currentVoter.location[1]
-    );
-
-    return distance <= walkList.max_distance_meters;
+    try {
+      const response = await fetch('/api/verify-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentLocation: {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+          },
+          voterLocation: {
+            latitude: currentVoter.location[0],
+            longitude: currentVoter.location[1],
+          },
+          maxDistance: walkList.max_distance_meters,
+        }),
+      });
+      const result = await response.json();
+      return result.isVerified;
+    } catch (error) {
+      console.error('Error verifying location:', error);
+      return false; // Default to not verified on error
+    }
   };
 
   const getDistanceToTarget = (): number | null => {
