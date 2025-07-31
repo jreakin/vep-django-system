@@ -52,15 +52,20 @@ export const authService = {
       const response = await api.get('/dashboards/stats/')
       // If the stats endpoint works, the user is authenticated
       // Return basic user info (this is a temporary implementation)
-      return {
-        id: 'current-user',
-        phone_number: 'authenticated-user',
-        role: 'campaign',
-        email: '',
-        is_verified: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
+      const decodedToken: any = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
+      return {
+        id: decodedToken.id,
+        phone_number: decodedToken.phone_number,
+        role: decodedToken.role,
+        email: decodedToken.email || '',
+        is_verified: decodedToken.is_verified,
+        created_at: decodedToken.created_at,
+        updated_at: decodedToken.updated_at,
+      };
     } catch (error) {
       throw new Error('User not authenticated')
     }
