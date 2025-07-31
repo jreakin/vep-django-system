@@ -194,6 +194,7 @@ export const removeSpatial = (element: HTMLElement): boolean => {
   try {
     // @ts-ignore
     if (element.spatial?.remove) {
+      // @ts-ignore
       element.spatial.remove();
       return true;
     }

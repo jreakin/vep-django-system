@@ -9,6 +9,7 @@ import { useAuthInitialization } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import DashboardWithSpatial from './pages/DashboardWithSpatial'
+import SpatialDemo from './pages/SpatialDemo'
 import Login from './pages/auth/Login'
 import CampaignList from './pages/campaigns/CampaignList'
 import VoterData from './pages/voter-data/VoterData'
@@ -72,6 +73,7 @@ const AppContent = () => {
                 <Route path="/" element={<DashboardWithSpatial />} />
                 <Route path="/dashboard" element={<DashboardWithSpatial />} />
                 <Route path="/dashboard/classic" element={<Dashboard />} />
+                <Route path="/dashboard/spatial-demo" element={<SpatialDemo />} />
                 <Route path="/campaigns" element={<CampaignList />} />
                 <Route path="/voter-data" element={<VoterData />} />
               </Routes>

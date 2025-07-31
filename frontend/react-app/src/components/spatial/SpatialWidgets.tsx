@@ -6,7 +6,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import SpatialMetricWidget from './SpatialMetricWidget';
-import { DashboardStats } from '../../services/dashboard';
+import type { DashboardStats } from '../../services/dashboard';
 
 export interface FundsRaisedWidgetProps {
   value: number;

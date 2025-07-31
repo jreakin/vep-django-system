@@ -18,9 +18,8 @@ import {
   isVisionOS, 
   makeSpatial, 
   removeSpatial, 
-  isSpatial, 
   SpatialWidget,
-  LevelOfDetailConfig 
+  type LevelOfDetailConfig 
 } from '../../utils/visionOS';
 
 export interface SpatialMetricWidgetProps {
