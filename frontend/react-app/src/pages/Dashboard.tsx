@@ -71,9 +71,9 @@ const Dashboard: React.FC = () => {
     console.log(`Widget ${widgetId} popped out to spatial environment`);
   };
 
-  // Note: MetricCard is kept for legacy compatibility but replaced by SpatialMetricWidget
-  // poppedWidgets tracks spatial widgets that have been moved to visionOS environment
+  // Dynamically select the metric component based on platform support
   const componentType = getMetricComponent();
+  const MetricComponent = componentType === 'spatial' ? SpatialMetricWidget : MetricCard;
   console.log('Dashboard initialized with spatial features for', poppedWidgets.size, 'popped widgets, using', componentType, 'components');
 
   useEffect(() => {
