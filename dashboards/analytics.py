@@ -96,6 +96,20 @@ class AnalyticsService:
             }
         )
     
+    def _validate_and_sanitize_filters(self, model_class, filters: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and sanitize filters for the given model class."""
+        sanitized_filters = {}
+        model_fields = {field.name: field for field in model_class._meta.get_fields()}
+        
+        for field, value in filters.items():
+            if field not in model_fields:
+                raise ValueError(f"Invalid filter field: {field}")
+            
+            # Optionally, add type checks or sanitization for `value` here
+            sanitized_filters[field] = value
+        
+        return sanitized_filters
+    
     def _build_queryset(self, model_class, user: User, query_config: QueryConfig):
         """Build Django queryset from query configuration."""
         
