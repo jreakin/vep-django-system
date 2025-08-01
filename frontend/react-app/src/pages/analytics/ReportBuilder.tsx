@@ -363,13 +363,13 @@ const ReportBuilder: React.FC = () => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `report_${reportId}.${format}`
+      a.download = `report_${sanitizedReportId}.${sanitizedFormat}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      setSuccess(`Report exported as ${format}`)
+      setSuccess(`Report exported as ${sanitizedFormat}`)
     } catch (err) {
       setError('Failed to export report')
     } finally {
