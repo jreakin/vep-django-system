@@ -21,7 +21,6 @@ import {
   CircularProgress,
   Stack,
   Paper,
-  Divider,
   Autocomplete,
   Switch,
   FormControlLabel,
@@ -294,12 +293,12 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey={chart_config?.valueKey || 'value'}
               >
-                {cached_data.map((entry: any, index: number) => (
+                {cached_data.map((_entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -386,7 +385,7 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
     const isRefreshing = refreshing.includes(widget.id);
     
     return (
-      <Grid item xs={12} md={widget.width} key={widget.id}>
+      <Grid size={{ xs: 12, md: widget.width }} key={widget.id}>
         <Card sx={{ height: widget.height * 100, position: 'relative' }}>
           <CardContent sx={{ height: '100%', pb: 1 }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
@@ -466,7 +465,7 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
         {dashboard.widgets.map(renderWidget)}
         
         {isEditing && (
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card 
               sx={{ 
                 height: 400, 
@@ -598,8 +597,8 @@ const AnalyticsDashboardComponent: React.FC<AnalyticsDashboardProps> = ({
               freeSolo
               options={sampleQueries}
               value={currentQuery}
-              onChange={(event, newValue) => setCurrentQuery(newValue || '')}
-              onInputChange={(event, newInputValue) => setCurrentQuery(newInputValue)}
+              onChange={(_event, newValue) => setCurrentQuery(newValue || '')}
+              onInputChange={(_event, newInputValue) => setCurrentQuery(newInputValue)}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -705,7 +704,7 @@ const WidgetEditorDialog: React.FC<{
           </FormControl>
           
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 label="Width (Grid Units)"
                 type="number"
@@ -715,7 +714,7 @@ const WidgetEditorDialog: React.FC<{
                 inputProps={{ min: 1, max: 12 }}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 label="Height (Grid Units)"
                 type="number"

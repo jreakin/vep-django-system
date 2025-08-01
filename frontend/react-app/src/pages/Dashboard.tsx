@@ -12,6 +12,7 @@ import {
 import {
   TrendingUp,
   People,
+  Dashboard as DashboardIcon,
   AttachMoney,
   Notifications,
 } from '@mui/icons-material'

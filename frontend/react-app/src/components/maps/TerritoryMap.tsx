@@ -173,16 +173,16 @@ const LocationTracker: React.FC<{
     if (tracking) {
       map.locate({ watch: true, enableHighAccuracy: true });
       
-      const onLocationFound = (e: L.LocationEvent) => {
+      const handleLocationFound = (e: L.LocationEvent) => {
         const { lat, lng } = e.latlng;
         onLocationFound([lat, lng]);
       };
 
-      map.on('locationfound', onLocationFound);
+      map.on('locationfound', handleLocationFound);
 
       return () => {
         map.stopLocate();
-        map.off('locationfound', onLocationFound);
+        map.off('locationfound', handleLocationFound);
       };
     }
   }, [map, tracking, onLocationFound]);
@@ -294,7 +294,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
     });
   };
 
-  const handleDrawDeleted = (layers: any) => {
+  const handleDrawDeleted = (_layers: any) => {
     if (selectedTerritory) {
       onTerritoryDelete(selectedTerritory);
     }
@@ -462,7 +462,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({
               key={territory.id}
               data={territory.boundary}
               style={() => getTerritoryStyle(territory)}
-              onEachFeature={(feature, layer) => onEachTerritory(territory, layer)}
+              onEachFeature={(_feature, layer) => onEachTerritory(territory, layer)}
             />
           ))}
 

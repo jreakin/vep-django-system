@@ -19,6 +19,10 @@ import {
 } from '@mui/icons-material';
 import voterDataService, { type UploadProgress } from '../services/voterData';
 
+// Constants for upload progress calculation
+const UPLOAD_PROGRESS_WEIGHT = 2; // Upload takes 50% of total progress
+const UPLOAD_PROGRESS_MAX = 50; // Upload progress stops at 50%
+
 interface FileUploadProps {
   onUploadComplete?: () => void;
   onUploadError?: (error: string) => void;
