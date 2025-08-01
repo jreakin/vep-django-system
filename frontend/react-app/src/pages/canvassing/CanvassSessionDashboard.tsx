@@ -479,7 +479,7 @@ const CanvassSessionDashboard: React.FC = () => {
                                   {response.gps_verified ? (
                                     <CheckCircle color="success" fontSize="small" />
                                   ) : (
-                                    <Alert color="warning" fontSize="small" />
+                                    <WarningIcon color="warning" fontSize="small" />
                                   )}
                                 </TableCell>
                                 <TableCell>{response.notes || 'No notes'}</TableCell>
