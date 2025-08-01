@@ -84,7 +84,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all for testing
+# CORS_ALLOW_ALL_ORIGINS = True  # Removed for security; use CORS_ALLOWED_ORIGINS instead
 
 # PIN Authentication Settings for SMS
 PIN_EXPIRY_MINUTES = 10
