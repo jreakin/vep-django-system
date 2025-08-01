@@ -16,8 +16,6 @@ import CampaignList from './pages/campaigns/CampaignList'
 import VoterDataOptimized from './pages/voter-data/VoterDataOptimized'
 import Dashboard from './pages/Dashboard'
 import SpatialDemo from './pages/SpatialDemo'
-import Login from './pages/auth/Login'
-import CampaignList from './pages/campaigns/CampaignList'
 import VoterData from './pages/voter-data/VoterData'
 import BillingDashboard from './pages/billing/BillingDashboard'
 import PaymentMethods from './pages/billing/PaymentMethods'
@@ -90,6 +88,7 @@ const AppContent = () => {
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/spatial-demo" element={<SpatialDemo />} />
           <Route path="/*" element={
             <ProtectedRoute>
               <Layout>
@@ -97,48 +96,34 @@ const AppContent = () => {
                   <Route path="/" element={<DashboardPhase3 />} />
                   <Route path="/dashboard" element={<DashboardPhase3 />} />
                   <Route path="/dashboard-old" element={<DashboardOptimized />} />
+                  <Route path="/dashboard-legacy" element={<Dashboard />} />
                   <Route path="/campaigns" element={<CampaignList />} />
                   <Route path="/voter-data" element={<VoterDataOptimized />} />
+                  <Route path="/voter-data-legacy" element={<VoterData />} />
+                  <Route path="/billing" element={<BillingDashboard />} />
+                  <Route path="/billing/payment-methods" element={<PaymentMethods />} />
+                  <Route path="/billing/invoices/:id" element={<InvoiceDetail />} />
+                  <Route path="/canvassing" element={<WalkListManager />} />
+                  <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
+                  <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
+                  <Route path="/redistricting" element={<PlanManager />} />
+                  <Route path="/redistricting/editor" element={<DistrictEditor />} />
+                  <Route path="/redistricting/editor/:planId" element={<DistrictEditor />} />
+                  <Route path="/redistricting/comparison" element={<PlanComparison />} />
+                  <Route path="/territories" element={<TerritoryManager />} />
+                  <Route path="/territories/mapper" element={<InteractiveMapper />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/impersonation" element={<ImpersonationPanel />} />
+                  <Route path="/admin/audit-logs" element={<AuditLogPage />} />
+                  <Route path="/integrations" element={<IntegrationsDashboard />} />
+                  <Route path="/analytics/modeling" element={<PredictiveModeling />} />
+                  <Route path="/analytics/reports" element={<ReportBuilder />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
           } />
         </Routes>
       </AnimatePresence>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/spatial-demo" element={<SpatialDemo />} />
-        <Route path="/*" element={
-          <ProtectedRoute>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/campaigns" element={<CampaignList />} />
-                <Route path="/voter-data" element={<VoterData />} />
-                <Route path="/billing" element={<BillingDashboard />} />
-                <Route path="/billing/payment-methods" element={<PaymentMethods />} />
-                <Route path="/billing/invoices/:id" element={<InvoiceDetail />} />
-                <Route path="/canvassing" element={<WalkListManager />} />
-                <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
-                <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
-                <Route path="/redistricting" element={<PlanManager />} />
-                <Route path="/redistricting/editor" element={<DistrictEditor />} />
-                <Route path="/redistricting/editor/:planId" element={<DistrictEditor />} />
-                <Route path="/redistricting/comparison" element={<PlanComparison />} />
-                <Route path="/territories" element={<TerritoryManager />} />
-                <Route path="/territories/mapper" element={<InteractiveMapper />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/impersonation" element={<ImpersonationPanel />} />
-                <Route path="/admin/audit-logs" element={<AuditLogPage />} />
-                <Route path="/integrations" element={<IntegrationsDashboard />} />
-                <Route path="/analytics/modeling" element={<PredictiveModeling />} />
-                <Route path="/analytics/reports" element={<ReportBuilder />} />
-              </Routes>
-            </Layout>
-          </ProtectedRoute>
-        } />
-      </Routes>
     </Router>
   )
 }
