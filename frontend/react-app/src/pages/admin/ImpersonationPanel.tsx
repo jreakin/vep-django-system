@@ -249,7 +249,7 @@ const ImpersonationPanel: React.FC = () => {
       setConfirmDialog(false)
       
       // In a real app, this would redirect to the user's view
-      console.log('Starting impersonation of:', targetUser.username)
+      // Log impersonation action securely if required (e.g., using an audit logging system)
       
     } catch (err) {
       setError('Failed to start impersonation. Please try again.')
