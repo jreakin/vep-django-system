@@ -13,9 +13,13 @@ import {
   TrendingUp,
   People,
   Dashboard as DashboardIcon,
+  AttachMoney,
   Notifications,
 } from '@mui/icons-material'
 import dashboardService, { type DashboardStats } from '../services/dashboard'
+import SpatialMetricWidget from '../components/SpatialMetricWidget'
+import SpatialWidgetManager from '../components/SpatialWidgetManager'
+import { type SpatialWidgetConfig } from '../utils/visionOS'
 
 interface MetricCardProps {
   title: string
@@ -24,7 +28,13 @@ interface MetricCardProps {
   color: string
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) => (
+// Legacy MetricCard component - kept for compatibility and potential non-spatial fallback
+// Currently replaced by SpatialMetricWidget which provides enhanced visionOS features
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for legacy fallback scenarios
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) => {
+  // This component could be used as fallback for environments without spatial support
+  console.log('MetricCard defined as fallback component');
+  return (
   <Card sx={{ height: '100%' }}>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -40,12 +50,32 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, color }) =>
       </Typography>
     </CardContent>
   </Card>
-)
+  );
+};
+
+// Function to get appropriate metric component based on platform
+const getMetricComponent = () => {
+  // Determine the platform or environment (mock condition for now)
+  const isVisionOS = true; // Replace with actual platform detection logic
+  console.log(`Using ${isVisionOS ? 'SpatialMetricWidget' : 'MetricCard'} based on platform`);
+  return isVisionOS ? 'spatial' : 'legacy';
+};
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [poppedWidgets, setPoppedWidgets] = useState<Set<string>>(new Set());
+
+  const handleWidgetPopped = (widgetId: string) => {
+    setPoppedWidgets(prev => new Set([...prev, widgetId]));
+    console.log(`Widget ${widgetId} popped out to spatial environment`);
+  };
+
+  // Dynamically select the metric component based on platform support
+  const componentType = getMetricComponent();
+  const MetricComponent = componentType === 'spatial' ? SpatialMetricWidget : MetricCard;
+  console.log('Dashboard initialized with spatial features for', poppedWidgets.size, 'popped widgets, using', componentType, 'components');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -54,9 +84,12 @@ const Dashboard: React.FC = () => {
         setError(null)
         const dashboardStats = await dashboardService.getStats()
         setStats(dashboardStats)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch dashboard data:', err)
-        setError(err.response?.data?.error || 'Failed to load dashboard data')
+        const errorMessage = err instanceof Error && 'response' in err 
+          ? (err as { response?: { data?: { error?: string } } }).response?.data?.error 
+          : 'Failed to load dashboard data'
+        setError(errorMessage || 'Failed to load dashboard data')
       } finally {
         setLoading(false)
       }
@@ -104,76 +137,101 @@ const Dashboard: React.FC = () => {
 
   const metrics = [
     {
-      title: 'Dashboards',
-      value: stats.dashboards_count.toString(),
-      icon: <DashboardIcon fontSize="large" />,
+      title: 'Funds Raised (Mock Data)',
+      value: `${stats.dashboards_count.toString()} (approx.)`,
+      icon: <AttachMoney fontSize="large" />,
       color: '#1976d2',
+      canPopOut: true,
+      id: 'funds-raised'
     },
     {
-      title: 'Total Voters',
+      title: 'Voter Contacts',
       value: stats.total_voters ? stats.total_voters.toLocaleString() : 'N/A',
       icon: <People fontSize="large" />,
       color: '#2e7d32',
+      canPopOut: true,
+      id: 'voter-contacts'
     },
     {
       title: 'Charts Created',
       value: stats.charts_count.toString(),
       icon: <TrendingUp fontSize="large" />,
       color: '#ed6c02',
+      canPopOut: true,
+      id: 'charts-created'
     },
     {
       title: 'Notifications',
       value: stats.unread_notifications.toString(),
       icon: <Notifications fontSize="large" />,
       color: '#9c27b0',
+      canPopOut: true,
+      id: 'notifications'
     },
   ]
 
+  const spatialWidgetConfigs: SpatialWidgetConfig[] = metrics.map(metric => ({
+    id: metric.id,
+    title: metric.title,
+    value: metric.value,
+    icon: metric.icon,
+    color: metric.color,
+    canPopOut: metric.canPopOut
+  }))
+
   return (
-    <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Dashboard
-      </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Welcome to your Political Campaign Management dashboard. Here's an overview of your current activities.
-      </Typography>
+    <SpatialWidgetManager spatialWidgets={spatialWidgetConfigs}>
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Welcome to your Political Campaign Management dashboard. Here's an overview of your current activities.
+        </Typography>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
-          gap: 3,
-          mb: 4,
-        }}
-      >
-        {metrics.map((metric) => (
-          <MetricCard key={metric.title} {...metric} />
-        ))}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' },
+            gap: 3,
+            mb: 4,
+          }}
+        >
+          {metrics.map((metric) => (
+            <SpatialMetricWidget
+              key={metric.id}
+              config={metric}
+              value={metric.value}
+              subtitle={metric.title === 'Voter Contacts' ? 'Total registered voters' : undefined}
+              onPopOut={() => handleWidgetPopped(metric.id)}
+            />
+          ))}
+        </Box>
+
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+          <Box sx={{ flex: 2 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Recent Activity
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Recent uploads: {stats.recent_uploads} | Recent voters: {stats.recent_voters || 0}
+              </Typography>
+            </Paper>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Create campaign, upload voter data, and other quick actions will be available here.
+              </Typography>
+            </Paper>
+          </Box>
+        </Stack>
       </Box>
-
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-        <Box sx={{ flex: 2 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Activity
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Recent uploads: {stats.recent_uploads} | Recent voters: {stats.recent_voters || 0}
-            </Typography>
-          </Paper>
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Quick Actions
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Create campaign, upload voter data, and other quick actions will be available here.
-            </Typography>
-          </Paper>
-        </Box>
-      </Stack>
-    </Box>
+    </SpatialWidgetManager>
   )
 }
 

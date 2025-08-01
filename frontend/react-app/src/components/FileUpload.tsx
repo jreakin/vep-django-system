@@ -106,7 +106,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         // Update upload progress during file transfer
         setUploadProgress(prev => prev ? {
           ...prev,
-          progress: Math.min(progress / UPLOAD_PROGRESS_WEIGHT, UPLOAD_PROGRESS_MAX) // First UPLOAD_PROGRESS_MAX% is file upload
+          progress: Math.min(progress / 100, 90) // First 90% is file upload
         } : null);
       });
       
