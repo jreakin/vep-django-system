@@ -57,29 +57,62 @@ def check_url_patterns():
     print("\n🔍 Checking URL Patterns...")
     
     try:
-        from CampaignManager.urls import urlpatterns
-        
-        api_patterns = [
-            'api/auth/', 'api/users/', 'api/billing/', 'api/voter-data/',
-            'api/dashboards/', 'api/integrations/', 'api/canvassing/',
-            'api/campaigns/', 'api/forms/', 'api/territories/',
-            'api/redistricting/', 'api/analytics/'
-        ]
-        
-        configured_patterns = []
-        for pattern in urlpatterns:
-            pattern_str = str(pattern.pattern)
-            configured_patterns.append(pattern_str)
-        
-        for api_pattern in api_patterns:
-            found = any(api_pattern in pattern for pattern in configured_patterns)
-            if found:
-                print(f"  ✅ {api_pattern} configured")
-            else:
-                print(f"  ❌ {api_pattern} missing")
-        
-        print(f"  📊 Total URL patterns: {len(urlpatterns)}")
-        return True
+        # Try to import Django first, if not available, parse the file as text
+        try:
+            from CampaignManager.urls import urlpatterns
+            
+            api_patterns = [
+                'api/auth/', 'api/users/', 'api/billing/', 'api/voter-data/',
+                'api/dashboards/', 'api/integrations/', 'api/canvassing/',
+                'api/campaigns/', 'api/forms/', 'api/territories/',
+                'api/redistricting/', 'api/analytics/'
+            ]
+            
+            configured_patterns = []
+            for pattern in urlpatterns:
+                pattern_str = str(pattern.pattern)
+                configured_patterns.append(pattern_str)
+            
+            for api_pattern in api_patterns:
+                found = any(api_pattern in pattern for pattern in configured_patterns)
+                if found:
+                    print(f"  ✅ {api_pattern} configured")
+                else:
+                    print(f"  ❌ {api_pattern} missing")
+            
+            print(f"  📊 Total URL patterns: {len(urlpatterns)}")
+            return True
+            
+        except ImportError:
+            # Django not available, parse urls.py as text
+            urls_file = Path(__file__).parent / 'CampaignManager' / 'urls.py'
+            if not urls_file.exists():
+                print("  ❌ CampaignManager/urls.py not found")
+                return False
+            
+            with open(urls_file, 'r') as f:
+                content = f.read()
+            
+            api_patterns = [
+                'api/auth/', 'api/users/', 'api/billing/', 'api/voter-data/',
+                'api/dashboards/', 'api/integrations/', 'api/canvassing/',
+                'api/campaigns/', 'api/forms/', 'api/territories/',
+                'api/redistricting/', 'api/analytics/'
+            ]
+            
+            missing_patterns = []
+            for api_pattern in api_patterns:
+                if api_pattern in content:
+                    print(f"  ✅ {api_pattern} configured")
+                else:
+                    print(f"  ❌ {api_pattern} missing")
+                    missing_patterns.append(api_pattern)
+            
+            # Count path() declarations as a rough estimate
+            path_count = content.count('path(')
+            print(f"  📊 Estimated URL patterns: {path_count}")
+            
+            return len(missing_patterns) == 0
         
     except Exception as e:
         print(f"  ❌ Error checking URL patterns: {e}")
@@ -90,24 +123,58 @@ def check_models():
     print("\n🔍 Checking Model Structure...")
     
     try:
-        from users.models import User, AuthPIN
-        from voter_data.models import VoterRecord
-        from campaigns.models import Campaign, Audience
-        
-        models_to_check = [
-            (User, 'User'),
-            (AuthPIN, 'AuthPIN'),
-            (VoterRecord, 'VoterRecord'),
-            (Campaign, 'Campaign'),
-            (Audience, 'Audience')
-        ]
-        
-        for model, name in models_to_check:
-            # Check if model has required fields
-            fields = [f.name for f in model._meta.fields]
-            print(f"  ✅ {name} model: {len(fields)} fields")
-        
-        return True
+        # Try to import Django models first, if not available, check file structure
+        try:
+            from users.models import User, AuthPIN
+            from voter_data.models import VoterRecord
+            from campaigns.models import Campaign, Audience
+            
+            models_to_check = [
+                (User, 'User'),
+                (AuthPIN, 'AuthPIN'),
+                (VoterRecord, 'VoterRecord'),
+                (Campaign, 'Campaign'),
+                (Audience, 'Audience')
+            ]
+            
+            for model, name in models_to_check:
+                # Check if model has required fields
+                fields = [f.name for f in model._meta.fields]
+                print(f"  ✅ {name} model: {len(fields)} fields")
+            
+            return True
+            
+        except ImportError:
+            # Django not available, check model files exist and have basic structure
+            base_dir = Path(__file__).parent
+            
+            model_files = [
+                ('users/models.py', ['User', 'AuthPIN']),
+                ('voter_data/models.py', ['VoterRecord']),
+                ('campaigns/models.py', ['Campaign', 'Audience']),
+                ('dashboards/models.py', ['Dashboard', 'AuditLog'])
+            ]
+            
+            all_models_found = True
+            for file_path, expected_models in model_files:
+                full_path = base_dir / file_path
+                if not full_path.exists():
+                    print(f"  ❌ Model file missing: {file_path}")
+                    all_models_found = False
+                    continue
+                
+                # Read file and check for model definitions
+                with open(full_path, 'r') as f:
+                    content = f.read()
+                
+                for model_name in expected_models:
+                    if f"class {model_name}" in content:
+                        print(f"  ✅ {model_name} model found in {file_path}")
+                    else:
+                        print(f"  ❌ {model_name} model missing in {file_path}")
+                        all_models_found = False
+            
+            return all_models_found
         
     except Exception as e:
         print(f"  ❌ Error checking models: {e}")
