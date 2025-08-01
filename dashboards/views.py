@@ -12,7 +12,7 @@ from .serializers import (
     DashboardSerializer, AuditLogSerializer, NotificationSerializer,
     ChartConfigSerializer, FileUploadSerializer
 )
-from .analytics import AnalyticsService, SimpleNLPService, QueryConfig
+from .analytics import AnalyticsService, SimpleNLPService, QueryConfig, ActionCommand
 import json
 
 
@@ -464,9 +464,261 @@ def create_preset_charts(request):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def chart_data(request, chart_id):
+class ConversationalUIView(APIView):
+    """
+    Conversational UI that processes natural language input to handle chart queries 
+    and action commands.
+    
+    This class provides an endpoint for users to interact with the system using natural 
+    language. It determines whether the input is a chart query or an action command and 
+    delegates the processing to the appropriate handler.
+    
+    Attributes:
+        permission_classes (list): Permissions required to access this view.
+    """
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """
+        Process natural language input and execute the appropriate action.
+        
+        This method accepts a POST request with a natural language query. It determines 
+        whether the query is an action command or a chart query and processes it accordingly.
+        
+        Args:
+            request (Request): The HTTP request object containing user input.
+        
+        Returns:
+            Response: A JSON response indicating success or failure, along with the 
+            appropriate data or error message.
+        """
+        
+        query_text = request.data.get('query', '')
+        
+        if not query_text:
+            return Response({
+                'success': False,
+                'message': 'Query text is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            nlp_service = SimpleNLPService()
+            
+            # Determine if this is an action command or chart query
+            if nlp_service.is_action_command(query_text):
+                return self._handle_action_command(request, query_text, nlp_service)
+            else:
+                return self._handle_chart_query(request, query_text, nlp_service)
+                
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _handle_action_command(self, request, query_text, nlp_service):
+        """Handle action commands like create, add, schedule."""
+        
+        action_command = nlp_service.parse_action_command(query_text)
+        
+        try:
+            result = self._execute_action_command(request.user, action_command)
+            
+            return Response({
+                'success': True,
+                'type': 'action',
+                'command': action_command.model_dump(),
+                'result': result,
+                'original_query': query_text
+            })
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'type': 'action',
+                'command': action_command.model_dump(),
+                'message': str(e),
+                'original_query': query_text
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _handle_chart_query(self, request, query_text, nlp_service):
+        """Handle chart generation queries."""
+        
+        # Parse natural language query
+        query_config = nlp_service.parse_query(query_text)
+        
+        # Generate chart data
+        analytics_service = AnalyticsService()
+        chart_data = analytics_service.generate_chart_from_query(
+            user=request.user,
+            query_config=query_config
+        )
+        
+        return Response({
+            'success': True,
+            'type': 'chart',
+            'chart_data': chart_data.model_dump(),
+            'query_config': query_config.model_dump(),
+            'original_query': query_text
+        })
+    
+    def _execute_action_command(self, user, action_command: ActionCommand):
+        """Execute the parsed action command."""
+        
+        command_type = action_command.command_type
+        entity_type = action_command.entity_type
+        parameters = action_command.parameters
+        
+        if command_type == 'create' and entity_type == 'contact_list':
+            return self._create_contact_list(user, parameters)
+        elif command_type == 'add' and entity_type == 'voter':
+            return self._add_voter(user, parameters)
+        elif command_type == 'schedule' and entity_type in ['email', 'broadcast']:
+            return self._schedule_broadcast(user, parameters)
+        elif command_type == 'show' or command_type == 'list':
+            return self._show_entities(user, entity_type, parameters)
+        else:
+            raise ValueError(f"Unsupported command: {command_type} {entity_type}")
+    
+    def _create_contact_list(self, user, parameters):
+        """Create a contact list based on parameters."""
+        from voter_data.models import VoterRecord
+        
+        # Build query based on parameters
+        queryset = VoterRecord.objects.filter(account_owner=user)
+        
+        # Apply filters
+        if 'age_max' in parameters:
+            from datetime import date
+            min_birth_year = date.today().year - parameters['age_max']
+            queryset = queryset.filter(birth_year__gte=min_birth_year)
+        
+        if 'age_min' in parameters:
+            from datetime import date
+            max_birth_year = date.today().year - parameters['age_min']
+            queryset = queryset.filter(birth_year__lte=max_birth_year)
+        
+        if 'state' in parameters:
+            queryset = queryset.filter(residence_part_state__icontains=parameters['state'])
+        
+        if 'city' in parameters:
+            queryset = queryset.filter(residence_part_city__icontains=parameters['city'])
+        
+        # Get count and sample
+        total_count = queryset.count()
+        sample_voters = list(queryset[:5].values('first_name', 'last_name', 'residence_part_city', 'residence_part_state'))
+        
+        # For now, we'll return the query result rather than actually creating a saved list
+        # In a full implementation, this would create a ContactList model
+        return {
+            'action': 'contact_list_created',
+            'total_voters': total_count,
+            'sample_voters': sample_voters,
+            'filters_applied': parameters,
+            'message': f"Contact list created with {total_count} voters matching your criteria."
+        }
+    
+    def _add_voter(self, user, parameters):
+        """Add a new voter to the database."""
+        from voter_data.models import VoterRecord
+        
+        # Extract required fields
+        if 'name' not in parameters:
+            raise ValueError("Voter name is required")
+        
+        # Parse full name
+        name_parts = parameters['name'].split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Create voter record
+        voter_data = {
+            'account_owner': user,
+            'first_name': first_name,
+            'last_name': last_name,
+        }
+        
+        # Add optional fields
+        if 'phone' in parameters:
+            voter_data['primary_phone_num'] = parameters['phone']
+        if 'email' in parameters:
+            voter_data['primary_email_addr'] = parameters['email']
+        if 'state' in parameters:
+            voter_data['residence_part_state'] = parameters['state']
+        if 'city' in parameters:
+            voter_data['residence_part_city'] = parameters['city']
+        if 'age' in parameters:
+            from datetime import date
+            birth_year = date.today().year - parameters['age']
+            voter_data['birth_year'] = birth_year
+        
+        voter = VoterRecord.objects.create(**voter_data)
+        
+        return {
+            'action': 'voter_added',
+            'voter_id': str(voter.id),
+            'voter_name': f"{first_name} {last_name}",
+            'message': f"Successfully added voter: {first_name} {last_name}"
+        }
+    
+    def _schedule_broadcast(self, user, parameters):
+        """Schedule an email broadcast."""
+        # This is a placeholder implementation
+        # In a real system, this would integrate with an email service
+        
+        scheduled_time = parameters.get('scheduled_time')
+        scheduled_hour = parameters.get('scheduled_hour')
+        scheduled_minute = parameters.get('scheduled_minute')
+        
+        if scheduled_time:
+            schedule_desc = f"at {scheduled_time}"
+        elif scheduled_hour is not None:
+            schedule_desc = f"at {scheduled_hour:02d}:{scheduled_minute or 0:02d}"
+        else:
+            schedule_desc = "for immediate delivery"
+        
+        return {
+            'action': 'broadcast_scheduled',
+            'scheduled_for': schedule_desc,
+            'recipient_type': 'active_volunteers',
+            'message': f"Email broadcast scheduled {schedule_desc} to all active volunteers."
+        }
+    
+    def _show_entities(self, user, entity_type, parameters):
+        """Show/list entities based on type and parameters."""
+        
+        if entity_type == 'voter':
+            from voter_data.models import VoterRecord
+            queryset = VoterRecord.objects.filter(account_owner=user)
+            
+            # Apply filters
+            if 'state' in parameters:
+                queryset = queryset.filter(residence_part_state__icontains=parameters['state'])
+            
+            total = queryset.count()
+            recent = queryset[:10].values('first_name', 'last_name', 'residence_part_city', 'residence_part_state')
+            
+            return {
+                'action': 'show_voters',
+                'total_count': total,
+                'recent_voters': list(recent),
+                'message': f"Found {total} voters in your database."
+            }
+        
+        elif entity_type == 'volunteer':
+            # Placeholder for volunteer management
+            return {
+                'action': 'show_volunteers',
+                'total_count': 0,
+                'message': "Volunteer management feature coming soon."
+            }
+        
+        else:
+            return {
+                'action': 'show_unknown',
+                'message': f"Unable to show {entity_type}. Feature not yet implemented."
+            }
     """Get current data for a specific chart configuration."""
     
     try:

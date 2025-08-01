@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import { useForm, useFieldArray } from 'react-hook-form';
 import {
   Box,
   Card,
@@ -18,7 +16,6 @@ import {
   Radio,
   RadioGroup,
   Rating,
-  Slider,
   Switch,
   IconButton,
   Accordion,
@@ -26,35 +23,22 @@ import {
   AccordionDetails,
   Stack,
   Chip,
-  Divider,
   Paper,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Tooltip,
   Alert,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   Add,
   Delete,
   Edit,
-  DragHandle,
   Preview,
   Save,
   ExpandMore,
-  Visibility,
-  Code,
-  Share,
 } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface FormField {
   id: string;
@@ -147,7 +131,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
   const [previewMode, setPreviewMode] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { control, setValue, formState: { errors } } = useForm({
     defaultValues: template,
   });
 
@@ -214,25 +198,6 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
     setTemplate(prev => ({
       ...prev,
       fields: prev.fields.filter(f => f.id !== fieldId),
-    }));
-  };
-
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-
-    const newFields = Array.from(template.fields);
-    const [reorderedField] = newFields.splice(result.source.index, 1);
-    newFields.splice(result.destination.index, 0, reorderedField);
-
-    // Update order values
-    const updatedFields = newFields.map((field, index) => ({
-      ...field,
-      order: index,
-    }));
-
-    setTemplate(prev => ({
-      ...prev,
-      fields: updatedFields,
     }));
   };
 
@@ -474,7 +439,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
 
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
         {/* Form Builder */}
-        <Grid item xs={8}>
+        <Grid xs={8}>
           <Paper elevation={2} sx={{ p: 2, height: '100%' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
               <Typography variant="h6">Form Fields</Typography>
@@ -489,76 +454,51 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
               )}
             </Stack>
 
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="form-fields">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {template.fields.map((field, index) => (
-                      <Draggable
-                        key={field.id}
-                        draggableId={field.id}
-                        index={index}
-                        isDragDisabled={mode === 'view'}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                          >
-                            <Card sx={{ mb: 2 }}>
-                              <CardContent>
-                                <Stack direction="row" alignItems="center" spacing={2}>
-                                  {mode !== 'view' && (
-                                    <div {...provided.dragHandleProps}>
-                                      <DragHandle color="action" />
-                                    </div>
-                                  )}
-                                  <Box sx={{ flexGrow: 1 }}>
-                                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                                      <Typography variant="subtitle1">{field.label}</Typography>
-                                      <Chip label={field.field_type} size="small" />
-                                      {field.is_required && (
-                                        <Chip label="Required" size="small" color="error" />
-                                      )}
-                                    </Stack>
-                                    <Typography variant="body2" color="text.secondary">
-                                      Field Name: {field.field_name}
-                                    </Typography>
-                                    {field.help_text && (
-                                      <Typography variant="body2" color="text.secondary">
-                                        Help: {field.help_text}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                  {mode !== 'view' && (
-                                    <Stack direction="row" spacing={1}>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() => handleEditField(field)}
-                                      >
-                                        <Edit />
-                                      </IconButton>
-                                      <IconButton
-                                        size="small"
-                                        onClick={() => handleDeleteField(field.id)}
-                                        color="error"
-                                      >
-                                        <Delete />
-                                      </IconButton>
-                                    </Stack>
-                                  )}
-                                </Stack>
-                              </CardContent>
-                            </Card>
-                          </div>
+            {/* Form Fields List */}
+            <div>
+              {template.fields.map((field, index) => (
+                <Card sx={{ mb: 2 }} key={field.id}>
+                  <CardContent>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                          <Typography variant="subtitle1">{field.label}</Typography>
+                          <Chip label={field.field_type} size="small" />
+                          {field.is_required && (
+                            <Chip label="Required" size="small" color="error" />
+                          )}
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          Field Name: {field.field_name}
+                        </Typography>
+                        {field.help_text && (
+                          <Typography variant="body2" color="text.secondary">
+                            Help: {field.help_text}
+                          </Typography>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                      </Box>
+                      {mode !== 'view' && (
+                        <Stack direction="row" spacing={1}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditField(field)}
+                          >
+                            <Edit />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteField(field.id)}
+                            color="error"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Stack>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
             {template.fields.length === 0 && (
               <Box
@@ -579,7 +519,7 @@ const DynamicFormBuilder: React.FC<DynamicFormBuilderProps> = ({
         </Grid>
 
         {/* Field Types Panel */}
-        <Grid item xs={4}>
+        <Grid xs={4}>
           <Paper elevation={2} sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
               Field Types
@@ -686,7 +626,7 @@ const FieldEditorDialog: React.FC<{
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid xs={6}>
               <TextField
                 label="Field Name"
                 value={editingField.field_name}
@@ -695,7 +635,7 @@ const FieldEditorDialog: React.FC<{
                 helperText="Unique identifier for this field"
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid xs={6}>
               <FormControl fullWidth>
                 <InputLabel>Field Type</InputLabel>
                 <Select
@@ -925,7 +865,7 @@ const DynamicFormRenderer: React.FC<{ template: FormTemplate }> = ({ template })
     }
 
     return (
-      <Grid item xs={12} sm={gridWidth} key={field.id}>
+      <Grid xs={12} sm={gridWidth} key={field.id}>
         {component}
       </Grid>
     );

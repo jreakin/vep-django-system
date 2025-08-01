@@ -18,4 +18,6 @@ urlpatterns = [
     path('widget/<uuid:widget_id>/data/', views.get_widget_data, name='widget-data'),
     path('predictions/batch/', views.batch_predict, name='batch-predict'),
     path('insights/generate/', views.generate_insights, name='generate-insights'),
+    path('3d-model/', views.generate_3d_model, name='generate-3d-model'),
+    path('3d-model-url/', views.get_3d_model_url, name='get-3d-model-url'),
 ]

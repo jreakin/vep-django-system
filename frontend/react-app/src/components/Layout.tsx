@@ -12,16 +12,23 @@ import {
   Toolbar,
   Typography,
   IconButton,
+  Collapse,
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,
   Campaign as CampaignIcon,
   People as PeopleIcon,
-  Assessment as AssessmentIcon,
   AccountBalance as BillingIcon,
-  Settings as SettingsIcon,
   Menu as MenuIcon,
   Logout as LogoutIcon,
+  AdminPanelSettings as AdminIcon,
+  Api as IntegrationsIcon,
+  Analytics as AnalyticsIcon,
+  LocationOn as TerritoryIcon,
+  HowToVote as CanvassingIcon,
+  AccountTree as RedistrictingIcon,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -37,12 +44,20 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [openMenus, setOpenMenus] = React.useState<{[key: string]: boolean}>({})
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { user } = useSelector((state: RootState) => state.auth)
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
+  }
+
+  const handleMenuToggle = (menu: string) => {
+    setOpenMenus(prev => ({
+      ...prev,
+      [menu]: !prev[menu]
+    }))
   }
 
   const handleLogout = () => {
@@ -54,9 +69,56 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Campaigns', icon: <CampaignIcon />, path: '/campaigns' },
     { text: 'Voter Data', icon: <PeopleIcon />, path: '/voter-data' },
-    { text: 'Canvassing', icon: <AssessmentIcon />, path: '/canvassing' },
     { text: 'Billing', icon: <BillingIcon />, path: '/billing' },
-    { text: 'Integrations', icon: <SettingsIcon />, path: '/integrations' },
+    { 
+      text: 'Canvassing', 
+      icon: <CanvassingIcon />, 
+      path: '/canvassing',
+      subItems: [
+        { text: 'Walk Lists', path: '/canvassing' },
+        { text: 'Sessions', path: '/canvassing/sessions' },
+        { text: 'Questionnaires', path: '/canvassing/questionnaires' }
+      ]
+    },
+    { 
+      text: 'Redistricting', 
+      icon: <RedistrictingIcon />, 
+      path: '/redistricting',
+      subItems: [
+        { text: 'Plan Manager', path: '/redistricting' },
+        { text: 'District Editor', path: '/redistricting/editor' },
+        { text: 'Plan Comparison', path: '/redistricting/comparison' }
+      ]
+    },
+    { 
+      text: 'Territories', 
+      icon: <TerritoryIcon />, 
+      path: '/territories',
+      subItems: [
+        { text: 'Territory Manager', path: '/territories' },
+        { text: 'Interactive Mapper', path: '/territories/mapper' }
+      ]
+    },
+    { 
+      text: 'Analytics', 
+      icon: <AnalyticsIcon />, 
+      path: '/analytics',
+      subItems: [
+        { text: 'Predictive Modeling', path: '/analytics/modeling' },
+        { text: 'Report Builder', path: '/analytics/reports' }
+      ]
+    },
+    { text: 'Integrations', icon: <IntegrationsIcon />, path: '/integrations' },
+    { 
+      text: 'Admin', 
+      icon: <AdminIcon />, 
+      path: '/admin',
+      subItems: [
+        { text: 'User Management', path: '/admin/users' },
+        { text: 'Impersonation', path: '/admin/impersonation' },
+        { text: 'Audit Logs', path: '/admin/audit-logs' }
+      ]
+    },
   ]
 
   const drawer = (
@@ -68,12 +130,39 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </Toolbar>
       <List>
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton onClick={() => navigate(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+          <React.Fragment key={item.text}>
+            <ListItem disablePadding>
+              <ListItemButton 
+                onClick={() => {
+                  if (item.subItems) {
+                    handleMenuToggle(item.text)
+                  } else {
+                    navigate(item.path)
+                  }
+                }}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+                {item.subItems && (openMenus[item.text] ? <ExpandLess /> : <ExpandMore />)}
+              </ListItemButton>
+            </ListItem>
+            {item.subItems && (
+              <Collapse in={openMenus[item.text]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.subItems.map((subItem) => (
+                    <ListItem key={subItem.text} disablePadding>
+                      <ListItemButton 
+                        sx={{ pl: 4 }}
+                        onClick={() => navigate(subItem.path)}
+                      >
+                        <ListItemText primary={subItem.text} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
+            )}
+          </React.Fragment>
         ))}
         <ListItem disablePadding>
           <ListItemButton onClick={handleLogout}>

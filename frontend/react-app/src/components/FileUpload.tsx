@@ -19,6 +19,10 @@ import {
 } from '@mui/icons-material';
 import voterDataService, { type UploadProgress } from '../services/voterData';
 
+// Constants for upload progress calculation
+const UPLOAD_PROGRESS_WEIGHT = 2; // Upload takes 50% of total progress
+const UPLOAD_PROGRESS_MAX = 50; // Upload progress stops at 50%
+
 interface FileUploadProps {
   onUploadComplete?: () => void;
   onUploadError?: (error: string) => void;
@@ -102,7 +106,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         // Update upload progress during file transfer
         setUploadProgress(prev => prev ? {
           ...prev,
-          progress: Math.min(progress / UPLOAD_PROGRESS_WEIGHT, UPLOAD_PROGRESS_MAX) // First UPLOAD_PROGRESS_MAX% is file upload
+          progress: Math.min(progress / 100, 90) // First 90% is file upload
         } : null);
       });
       

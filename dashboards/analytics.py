@@ -345,8 +345,16 @@ class AnalyticsService:
         return created_charts
 
 
+class ActionCommand(BaseModel):
+    """Represents an action command parsed from natural language."""
+    command_type: str = Field(description="Type of command (create, add, schedule, show)")
+    entity_type: str = Field(description="Entity type (voter, list, email, broadcast)")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Command parameters")
+    confidence: float = Field(default=0.0, description="Confidence score")
+
+
 class SimpleNLPService:
-    """Simple NLP service for parsing chart requests."""
+    """Enhanced NLP service for parsing chart requests and action commands."""
     
     def __init__(self):
         self.intent_patterns = {
@@ -354,6 +362,25 @@ class SimpleNLPService:
             'group_by': ['by', 'per', 'grouped by', 'breakdown', 'distribution'],
             'time': ['over time', 'trend', 'recent', 'last', 'past'],
             'compare': ['compare', 'vs', 'versus', 'difference'],
+        }
+        
+        # Action command patterns
+        self.action_patterns = {
+            'create': ['create', 'make', 'build', 'generate', 'new'],
+            'add': ['add', 'insert', 'register', 'include'],
+            'schedule': ['schedule', 'plan', 'set up', 'arrange'],
+            'show': ['show', 'display', 'list', 'view'],
+            'update': ['update', 'modify', 'change', 'edit'],
+            'delete': ['delete', 'remove', 'eliminate'],
+        }
+        
+        self.entity_patterns = {
+            'voter': ['voter', 'person', 'individual', 'constituent'],
+            'contact_list': ['contact list', 'list', 'group', 'segment'],
+            'email': ['email', 'message', 'communication'],
+            'broadcast': ['broadcast', 'campaign', 'blast', 'mass email'],
+            'volunteer': ['volunteer', 'supporter', 'activist'],
+            'event': ['event', 'meeting', 'rally'],
         }
         
         self.model_patterns = {
@@ -369,6 +396,159 @@ class SimpleNLPService:
             'age': ['age', 'ages'],
             'engagement_type': ['type', 'method', 'contact type'],
         }
+    
+    def is_action_command(self, text: str) -> bool:
+        """Determine if the text is an action command or a chart query."""
+        text_lower = text.lower()
+        
+        # Check for action verbs
+        for action_type, patterns in self.action_patterns.items():
+            if any(pattern in text_lower for pattern in patterns):
+                return True
+        
+        return False
+    
+    def parse_action_command(self, text: str) -> ActionCommand:
+        """Parse natural language into an action command."""
+        text_lower = text.lower()
+        
+        # Detect command type
+        command_type = None
+        confidence = 0.0
+        
+        for action_type, patterns in self.action_patterns.items():
+            matches = sum(1 for pattern in patterns if pattern in text_lower)
+            if matches > 0:
+                current_confidence = matches / len(patterns)
+                if current_confidence > confidence:
+                    command_type = action_type
+                    confidence = current_confidence
+        
+        if not command_type:
+            command_type = 'show'  # default
+        
+        # Detect entity type
+        entity_type = None
+        for entity, patterns in self.entity_patterns.items():
+            if any(pattern in text_lower for pattern in patterns):
+                entity_type = entity
+                break
+        
+        if not entity_type:
+            entity_type = 'voter'  # default
+        
+        # Extract parameters based on command and entity type
+        parameters = self._extract_parameters(text_lower, command_type, entity_type)
+        
+        return ActionCommand(
+            command_type=command_type,
+            entity_type=entity_type,
+            parameters=parameters,
+            confidence=confidence
+        )
+    
+    def _extract_parameters(self, text: str, command_type: str, entity_type: str) -> Dict[str, Any]:
+        """Extract parameters from the command text."""
+        parameters = {}
+        
+        # Extract common patterns
+        import re
+        
+        # Extract names in quotes
+        name_matches = re.findall(r"['\"]([^'\"]+)['\"]", text)
+        if name_matches:
+            parameters['name'] = name_matches[0]
+        
+        # Extract phone numbers
+        phone_matches = re.findall(r'(\d{3}[-.]?\d{3}[-.]?\d{4})', text)
+        if phone_matches:
+            parameters['phone'] = phone_matches[0]
+        
+        # Extract email addresses
+        email_matches = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
+        if email_matches:
+            parameters['email'] = email_matches[0]
+        
+        # Extract ages and age ranges
+        age_matches = re.findall(r'under (\d+)|age (\d+)|(\d+) years old|(\d+)-(\d+) years', text)
+        if age_matches:
+            for match in age_matches:
+                if match[0]:  # under X
+                    parameters['age_max'] = int(match[0])
+                elif match[1]:  # age X
+                    parameters['age'] = int(match[1])
+                elif match[2]:  # X years old
+                    parameters['age'] = int(match[2])
+                elif match[3] and match[4]:  # X-Y years
+                    parameters['age_min'] = int(match[3])
+                    parameters['age_max'] = int(match[4])
+        
+        # Extract locations
+        locations = []
+        us_states = ['alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 
+                    'connecticut', 'delaware', 'florida', 'georgia', 'hawaii', 'idaho', 
+                    'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana', 
+                    'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 
+                    'mississippi', 'missouri', 'montana', 'nebraska', 'nevada', 
+                    'new hampshire', 'new jersey', 'new mexico', 'new york', 
+                    'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 
+                    'pennsylvania', 'rhode island', 'south carolina', 'south dakota', 
+                    'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington', 
+                    'west virginia', 'wisconsin', 'wyoming']
+        
+        for state in us_states:
+            if state in text:
+                parameters['state'] = state.title()
+                break
+        
+        # Extract common city names
+        city_patterns = re.findall(r'in ([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)', text)
+        if city_patterns:
+            city = city_patterns[0]
+            if city.lower() not in us_states:  # Don't confuse cities with states
+                parameters['city'] = city
+        
+        # Extract time expressions for scheduling
+        time_patterns = {
+            'tomorrow': {'days': 1},
+            'next week': {'weeks': 1},
+            'next month': {'months': 1},
+            'in 1 hour': {'hours': 1},
+            'in 2 hours': {'hours': 2},
+        }
+        
+        for pattern, delta in time_patterns.items():
+            if pattern in text:
+                from datetime import datetime, timedelta
+                base_time = datetime.now()
+                if 'days' in delta:
+                    target_time = base_time + timedelta(days=delta['days'])
+                elif 'weeks' in delta:
+                    target_time = base_time + timedelta(weeks=delta['weeks'])
+                elif 'hours' in delta:
+                    target_time = base_time + timedelta(hours=delta['hours'])
+                elif 'months' in delta:
+                    target_time = base_time + timedelta(days=delta['months'] * 30)
+                
+                parameters['scheduled_time'] = target_time.isoformat()
+                break
+        
+        # Extract specific times (e.g., "at 10 AM")
+        time_matches = re.findall(r'at (\d{1,2})(?::(\d{2}))?\s*(am|pm)', text.lower())
+        if time_matches:
+            hour, minute, period = time_matches[0]
+            hour = int(hour)
+            minute = int(minute) if minute else 0
+            
+            if period == 'pm' and hour != 12:
+                hour += 12
+            elif period == 'am' and hour == 12:
+                hour = 0
+            
+            parameters['scheduled_hour'] = hour
+            parameters['scheduled_minute'] = minute
+        
+        return parameters
     
     def parse_query(self, text: str) -> QueryConfig:
         """Parse natural language query into QueryConfig."""

@@ -76,7 +76,7 @@ const VoterData: React.FC = () => {
     fetchVoters()
   }, [searchTerm, stateFilter, partyFilter, statusFilter, page, rowsPerPage])
 
-  const handlePageChange = (event: unknown, newPage: number) => {
+  const handlePageChange = (_event: unknown, newPage: number) => {
     setPage(newPage)
   }
 

@@ -49,7 +49,7 @@ export const authService = {
     // For now, we'll extract user data from the token verification
     // In a real implementation, this would be a dedicated endpoint
     try {
-      const response = await api.get('/dashboards/stats/')
+      await api.get('/dashboards/stats/')
       // If the stats endpoint works, the user is authenticated
       // Return basic user info (this is a temporary implementation)
       const token = localStorage.getItem('token');
