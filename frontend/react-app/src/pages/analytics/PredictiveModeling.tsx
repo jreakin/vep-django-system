@@ -317,7 +317,18 @@ const PredictiveModeling: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      const inputData = JSON.parse(predictionInput)
+      // Validate predictionInput
+      let inputData;
+      try {
+        inputData = JSON.parse(predictionInput);
+        if (typeof inputData !== 'object' || Array.isArray(inputData)) {
+          throw new Error('Input data must be a valid JSON object');
+        }
+      } catch (validationError) {
+        setError('Invalid input format - please provide a valid JSON object');
+        return;
+      }
+      
       const newPrediction: Prediction = {
         id: Date.now().toString(),
         model_id: selectedModel.id,
