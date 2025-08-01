@@ -42,8 +42,11 @@ def verify_pin(request):
         if not phone_number or not pin:
             return JsonResponse({'error': 'Phone number and PIN are required'}, status=400)
         
-        # Mock successful verification for PIN "123456"
-        if pin == "123456":
+        # Retrieve the expected PIN from cache
+        expected_pin = cache.get(f"pin_{phone_number}")
+        if expected_pin is not None and pin == expected_pin:
+            # Optionally, delete the PIN from cache after successful verification
+            cache.delete(f"pin_{phone_number}")
             return JsonResponse({
                 'message': 'Authentication successful',
                 'token': 'mock-auth-token-12345',
