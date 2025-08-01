@@ -9,7 +9,7 @@ import {
   Button
 } from '../components/ui'
 import ConversationalAI from '../components/ai/ConversationalAI'
-import District3DMap from '../components/visualization/District3DMap'
+// import District3DMap from '../components/visualization/District3DMap'
 
 // RSC-like data fetching hook
 const useDashboardData = () => {
@@ -485,11 +485,17 @@ const DashboardOptimized: React.FC = () => {
             <p className="tw-text-gray-600 tw-mb-6">
               Interactive 3D visualization of your district data. Explore voter density, fundraising, and canvassing progress.
             </p>
+            {/* TODO: Re-enable after React 19 compatibility fix
             <District3DMap 
               data={sampleGeographicData}
               districtBounds={sampleDistrictBounds}
               onDataPointClick={handleDataPointClick}
             />
+            */}
+            <div className="tw-p-8 tw-text-center tw-text-gray-500">
+              <p>3D Map visualization temporarily disabled due to React 19 compatibility.</p>
+              <p>Will be restored after library updates.</p>
+            </div>
           </div>
         </TabsContent>
         

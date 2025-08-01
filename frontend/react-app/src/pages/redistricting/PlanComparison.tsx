@@ -321,7 +321,7 @@ const PlanComparison: React.FC = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={5}>
+            <Grid xs={12} md={5}>
               <FormControl fullWidth>
                 <InputLabel>Select Plan 1</InputLabel>
                 <Select
@@ -343,7 +343,7 @@ const PlanComparison: React.FC = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2} sx={{ textAlign: 'center' }}>
+            <Grid xs={12} md={2} sx={{ textAlign: 'center' }}>
               <IconButton
                 onClick={handleSwapPlans}
                 disabled={!selectedPlan1 || !selectedPlan2}
@@ -353,7 +353,7 @@ const PlanComparison: React.FC = () => {
               </IconButton>
             </Grid>
             
-            <Grid item xs={12} md={5}>
+            <Grid xs={12} md={5}>
               <FormControl fullWidth>
                 <InputLabel>Select Plan 2</InputLabel>
                 <Select
@@ -416,7 +416,7 @@ const PlanComparison: React.FC = () => {
         <Box>
           {/* Plan Overview */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} md={6}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>{plan1Data.name}</Typography>
@@ -437,7 +437,7 @@ const PlanComparison: React.FC = () => {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} md={6}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>{plan2Data.name}</Typography>
@@ -536,7 +536,7 @@ const PlanComparison: React.FC = () => {
           {/* Visual Charts Tab */}
           {activeTab === 1 && (
             <Grid container spacing={3}>
-              <Grid item xs={12} md={8}>
+              <Grid xs={12} md={8}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>Metrics Comparison Chart</Typography>
@@ -566,7 +566,7 @@ const PlanComparison: React.FC = () => {
                 </Card>
               </Grid>
               
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>Summary</Typography>
@@ -614,7 +614,7 @@ const PlanComparison: React.FC = () => {
                   <AccordionDetails>
                     <Grid container spacing={2}>
                       {comparisonMetrics.filter(m => m.category === category).map((metric) => (
-                        <Grid item xs={12} md={6} key={metric.name}>
+                        <Grid xs={12} md={6} key={metric.name}>
                           <Card variant="outlined">
                             <CardContent>
                               <Typography variant="subtitle1" gutterBottom>

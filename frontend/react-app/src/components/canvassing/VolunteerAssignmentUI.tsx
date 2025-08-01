@@ -232,7 +232,7 @@ const VolunteerAssignmentUI: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Available Volunteers */}
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -275,7 +275,7 @@ const VolunteerAssignmentUI: React.FC = () => {
         </Grid>
 
         {/* Walk Lists */}
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <Typography variant="h6" gutterBottom>
             Walk Lists ({walkLists.length})
           </Typography>

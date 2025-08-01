@@ -465,7 +465,7 @@ const InteractiveMapper: React.FC = () => {
 
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
         {/* Control Panel */}
-        <Grid item xs={12} md={3}>
+        <Grid xs={12} md={3}>
           <Box sx={{ height: '100%', overflow: 'auto' }}>
             {/* Stats Card */}
             {stats && (
@@ -618,7 +618,7 @@ const InteractiveMapper: React.FC = () => {
         </Grid>
 
         {/* Map Area */}
-        <Grid item xs={12} md={9}>
+        <Grid xs={12} md={9}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ height: '100%', p: 1 }}>
               <MapContainer

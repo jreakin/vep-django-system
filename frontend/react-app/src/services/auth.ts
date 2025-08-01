@@ -14,11 +14,11 @@ interface AuthResponse {
 }
 
 interface SendPinRequest {
-  phone_number: string
+  phone: string  // Match our backend API
 }
 
 interface VerifyPinRequest {
-  phone_number: string
+  phone: string  // Match our backend API
   pin: string
 }
 

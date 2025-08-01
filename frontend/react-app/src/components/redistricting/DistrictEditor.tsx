@@ -349,7 +349,7 @@ const DistrictEditor: React.FC<DistrictEditorProps> = ({
 
       <Grid container spacing={2}>
         {/* Map */}
-        <Grid item xs={12} md={9}>
+        <Grid xs={12} md={9}>
           <Card>
             <CardContent sx={{ p: 0 }}>
               <Box sx={{ height: 600, position: 'relative' }}>
@@ -428,7 +428,7 @@ const DistrictEditor: React.FC<DistrictEditorProps> = ({
         </Grid>
 
         {/* District List & Properties */}
-        <Grid item xs={12} md={3}>
+        <Grid xs={12} md={3}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

@@ -123,7 +123,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
 
       {/* Usage Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
@@ -145,7 +145,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
@@ -168,7 +168,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
@@ -191,7 +191,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
@@ -211,7 +211,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
 
       {/* Charts */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card>
             <CardContent>
               <Bar data={usageChartData} options={chartOptions} />
@@ -219,7 +219,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card>
             <CardContent>
               <Pie data={costChartData} options={pieOptions} />
@@ -236,7 +236,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
           </Typography>
           
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
                   API Usage
@@ -250,7 +250,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
               </Box>
             </Grid>
             
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
                   Storage Usage
@@ -264,7 +264,7 @@ const UsageMetrics: React.FC<UsageMetricsProps> = ({ metrics }) => {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
                   User Accounts

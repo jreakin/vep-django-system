@@ -216,7 +216,7 @@ const RealTimeSessionMonitor: React.FC = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -234,7 +234,7 @@ const RealTimeSessionMonitor: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -252,7 +252,7 @@ const RealTimeSessionMonitor: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -270,7 +270,7 @@ const RealTimeSessionMonitor: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -421,7 +421,7 @@ const RealTimeSessionMonitor: React.FC = () => {
         <DialogContent>
           {selectedSession && (
             <Grid container spacing={3} sx={{ mt: 1 }}>
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                 <Typography variant="subtitle2" gutterBottom>
                   Session Information
                 </Typography>
@@ -444,7 +444,7 @@ const RealTimeSessionMonitor: React.FC = () => {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                 {selectedSession.progress && (
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
@@ -474,7 +474,7 @@ const RealTimeSessionMonitor: React.FC = () => {
               </Grid>
 
               {selectedSession.current_location && (
-                <Grid item xs={12}>
+                <Grid xs={12}>
                   <Typography variant="subtitle2" gutterBottom>
                     Current Location
                   </Typography>
@@ -494,7 +494,7 @@ const RealTimeSessionMonitor: React.FC = () => {
               )}
 
               {selectedSession.notes && (
-                <Grid item xs={12}>
+                <Grid xs={12}>
                   <Typography variant="subtitle2" gutterBottom>
                     Notes
                   </Typography>

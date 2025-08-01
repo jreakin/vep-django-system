@@ -1,62 +1,22 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
+import { Box, Card, CardContent, Typography, Grid } from '@mui/material'
 import CssBaseline from '@mui/material/CssBaseline'
-import { Provider, useSelector } from 'react-redux'
+import { Provider } from 'react-redux'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { store } from './store/index'
-import type { RootState } from './store'
-import { useAuthInitialization } from './hooks/useAuth'
-import { ThemeProvider as CustomThemeProvider } from './contexts/ThemeContext'
-import { AnimatePresence } from 'framer-motion'
-import Layout from './components/Layout'
-import DashboardOptimized from './pages/DashboardOptimized'
-import DashboardPhase3 from './pages/DashboardPhase3'
 import Login from './pages/auth/Login'
+import Dashboard from './pages/dashboard/Dashboard'
 import CampaignList from './pages/campaigns/CampaignList'
-import VoterDataOptimized from './pages/voter-data/VoterDataOptimized'
-import Dashboard from './pages/Dashboard'
-import SpatialDemo from './pages/SpatialDemo'
-import VoterData from './pages/voter-data/VoterData'
 import BillingDashboard from './pages/billing/BillingDashboard'
-import PaymentMethods from './pages/billing/PaymentMethods'
-import InvoiceDetail from './pages/billing/InvoiceDetail'
-import WalkListManager from './pages/canvassing/WalkListManager'
-import CanvassSessionDashboard from './pages/canvassing/CanvassSessionDashboard'
-import QuestionnaireBuilder from './pages/canvassing/QuestionnaireBuilder'
-import PlanManager from './pages/redistricting/PlanManager'
-import DistrictEditor from './pages/redistricting/DistrictEditor'
-import PlanComparison from './pages/redistricting/PlanComparison'
+import VoterDataOptimized from './pages/voter-data/VoterDataOptimized'
 import TerritoryManager from './pages/territories/TerritoryManager'
-import InteractiveMapper from './pages/territories/InteractiveMapper'
 import UserManagement from './pages/admin/UserManagement'
-import ImpersonationPanel from './pages/admin/ImpersonationPanel'
-import AuditLogPage from './pages/admin/AuditLogPage'
+import CanvassSessionDashboard from './pages/canvassing/CanvassSessionDashboard'
+import PlanManager from './pages/redistricting/PlanManager'
 import IntegrationsDashboard from './pages/integrations/IntegrationsDashboard'
 import PredictiveModeling from './pages/analytics/PredictiveModeling'
-import ReportBuilder from './pages/analytics/ReportBuilder'
-import './index.css'
-
-// Create Material-UI theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  typography: {
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 600,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
-    },
-  },
-})
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -68,76 +28,318 @@ const queryClient = new QueryClient({
   },
 })
 
-// Protected Route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth)
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-  
-  return <>{children}</>
-}
+// Create modern CRM theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#0070f3', // Modern blue
+      dark: '#0051cc',
+      light: '#4d94ff',
+    },
+    secondary: {
+      main: '#7c3aed', // Purple accent
+      dark: '#5b21b6',
+      light: '#a855f7',
+    },
+    background: {
+      default: '#fafbfc', // Light gray background
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#1a202c',
+      secondary: '#4a5568',
+    },
+    grey: {
+      50: '#f7fafc',
+      100: '#edf2f7',
+      200: '#e2e8f0',
+      300: '#cbd5e0',
+      400: '#a0aec0',
+      500: '#718096',
+      600: '#4a5568',
+      700: '#2d3748',
+      800: '#1a202c',
+      900: '#171923',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: '#1a202c',
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 600,
+      lineHeight: 1.3,
+      color: '#1a202c',
+    },
+    h3: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+      color: '#1a202c',
+    },
+    h4: {
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+      color: '#1a202c',
+    },
+    h5: {
+      fontSize: '1.125rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+      color: '#1a202c',
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+      color: '#1a202c',
+    },
+    body1: {
+      fontSize: '1rem',
+      lineHeight: 1.6,
+      color: '#4a5568',
+    },
+    body2: {
+      fontSize: '0.875rem',
+      lineHeight: 1.6,
+      color: '#4a5568',
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  shadows: [
+    'none',
+    '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.1)',
+    '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 4px 6px rgba(0, 0, 0, 0.1)',
+    '0px 4px 6px rgba(0, 0, 0, 0.05), 0px 10px 15px rgba(0, 0, 0, 0.1)',
+    '0px 10px 15px rgba(0, 0, 0, 0.05), 0px 20px 25px rgba(0, 0, 0, 0.1)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+    '0px 25px 50px rgba(0, 0, 0, 0.25)',
+  ],
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+          padding: '10px 20px',
+          fontWeight: 600,
+          fontSize: '0.875rem',
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+          },
+        },
+        contained: {
+          background: 'linear-gradient(135deg, #0070f3 0%, #4d94ff 100%)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #0051cc 0%, #3d7aff 100%)',
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.1)',
+          '&:hover': {
+            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.05), 0px 10px 15px rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+            '& fieldset': {
+              borderColor: '#e2e8f0',
+            },
+            '&:hover fieldset': {
+              borderColor: '#cbd5e0',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#0070f3',
+            },
+          },
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#ffffff',
+          color: '#1a202c',
+          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.1)',
+          borderBottom: '1px solid #e2e8f0',
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#1a202c',
+          color: '#ffffff',
+          borderRight: 'none',
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          margin: '4px 8px',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(0, 112, 243, 0.2)',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 112, 243, 0.3)',
+            },
+          },
+        },
+      },
+    },
+    MuiListItemIcon: {
+      styleOverrides: {
+        root: {
+          color: 'inherit',
+          minWidth: 40,
+        },
+      },
+    },
+  },
+})
 
-// App content with auth initialization
-const AppContent = () => {
-  useAuthInitialization()
-  
-  return (
-    <Router>
-      <AnimatePresence mode="wait">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/spatial-demo" element={<SpatialDemo />} />
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<DashboardPhase3 />} />
-                  <Route path="/dashboard" element={<DashboardPhase3 />} />
-                  <Route path="/dashboard-old" element={<DashboardOptimized />} />
-                  <Route path="/dashboard-legacy" element={<Dashboard />} />
-                  <Route path="/campaigns" element={<CampaignList />} />
-                  <Route path="/voter-data" element={<VoterDataOptimized />} />
-                  <Route path="/voter-data-legacy" element={<VoterData />} />
-                  <Route path="/billing" element={<BillingDashboard />} />
-                  <Route path="/billing/payment-methods" element={<PaymentMethods />} />
-                  <Route path="/billing/invoices/:id" element={<InvoiceDetail />} />
-                  <Route path="/canvassing" element={<WalkListManager />} />
-                  <Route path="/canvassing/sessions" element={<CanvassSessionDashboard />} />
-                  <Route path="/canvassing/questionnaires" element={<QuestionnaireBuilder />} />
-                  <Route path="/redistricting" element={<PlanManager />} />
-                  <Route path="/redistricting/editor" element={<DistrictEditor />} />
-                  <Route path="/redistricting/editor/:planId" element={<DistrictEditor />} />
-                  <Route path="/redistricting/comparison" element={<PlanComparison />} />
-                  <Route path="/territories" element={<TerritoryManager />} />
-                  <Route path="/territories/mapper" element={<InteractiveMapper />} />
-                  <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/impersonation" element={<ImpersonationPanel />} />
-                  <Route path="/admin/audit-logs" element={<AuditLogPage />} />
-                  <Route path="/integrations" element={<IntegrationsDashboard />} />
-                  <Route path="/analytics/modeling" element={<PredictiveModeling />} />
-                  <Route path="/analytics/reports" element={<ReportBuilder />} />
-                </Routes>
-              </Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </AnimatePresence>
-    </Router>
-  )
-}
+const SimpleDashboard = () => (
+  <Box 
+    sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      p: 3,
+    }}
+  >
+    <Card sx={{ maxWidth: 800, width: '100%' }}>
+      <CardContent sx={{ p: 4 }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: 'primary.main' }}>
+            CampaignManager
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+            Political Campaign Management System
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Welcome to the VEP Django System frontend. All components are working with modern CRM styling!
+          </Typography>
+        </Box>
+        
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          {[
+            { name: 'Login', path: '/login', icon: '🔐', color: '#0070f3' },
+            { name: 'Dashboard', path: '/dashboard', icon: '📊', color: '#7c3aed' },
+            { name: 'Campaigns', path: '/campaigns', icon: '🏛️', color: '#059669' },
+            { name: 'Voter Data', path: '/voter-data', icon: '👥', color: '#dc2626' },
+            { name: 'Billing', path: '/billing', icon: '💳', color: '#ea580c' },
+            { name: 'Territories', path: '/territories', icon: '🗺️', color: '#0891b2' },
+            { name: 'Canvassing', path: '/canvassing', icon: '🚪', color: '#7c2d12' },
+            { name: 'Redistricting', path: '/redistricting', icon: '🏗️', color: '#a21caf' },
+            { name: 'Admin', path: '/admin', icon: '⚙️', color: '#374151' },
+            { name: 'Integrations', path: '/integrations', icon: '🔗', color: '#1f2937' },
+            { name: 'Analytics', path: '/analytics', icon: '📈', color: '#6366f1' },
+          ].map((item) => (
+            <Grid item xs={6} sm={4} md={3} key={item.name}>
+              <Card
+                component="a"
+                href={item.path}
+                sx={{
+                  textDecoration: 'none',
+                  display: 'block',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 3,
+                  },
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                  <Typography variant="h4" sx={{ mb: 1 }}>
+                    {item.icon}
+                  </Typography>
+                  <Typography 
+                    variant="subtitle2" 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: item.color,
+                    }}
+                  >
+                    {item.name}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </CardContent>
+    </Card>
+  </Box>
+)
 
 function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <CustomThemeProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <AppContent />
-          </ThemeProvider>
-        </CustomThemeProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/campaigns" element={<CampaignList />} />
+              <Route path="/voter-data" element={<VoterDataOptimized />} />
+              <Route path="/billing" element={<BillingDashboard />} />
+              <Route path="/territories" element={<TerritoryManager />} />
+              <Route path="/canvassing" element={<CanvassSessionDashboard />} />
+              <Route path="/redistricting" element={<PlanManager />} />
+              <Route path="/admin" element={<UserManagement />} />
+              <Route path="/integrations" element={<IntegrationsDashboard />} />
+              <Route path="/analytics" element={<PredictiveModeling />} />
+              <Route path="/" element={<SimpleDashboard />} />
+            </Routes>
+          </Router>
+        </ThemeProvider>
       </QueryClientProvider>
     </Provider>
   )

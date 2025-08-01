@@ -201,7 +201,7 @@ const WalkListManager: React.FC = () => {
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="name"
               control={control}
@@ -218,7 +218,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="campaign_id"
               control={control}
@@ -238,7 +238,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="volunteer_id"
               control={control}
@@ -258,7 +258,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="target_date"
               control={control}
@@ -274,7 +274,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="max_distance_meters"
               control={control}
@@ -290,7 +290,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="require_gps_verification"
               control={control}
@@ -303,7 +303,7 @@ const WalkListManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="notes"
               control={control}
@@ -372,7 +372,7 @@ const WalkListManager: React.FC = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -390,7 +390,7 @@ const WalkListManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -408,7 +408,7 @@ const WalkListManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -426,7 +426,7 @@ const WalkListManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">

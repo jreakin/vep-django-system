@@ -28,7 +28,7 @@ import {
   FloatingActionButton
 } from '../components/animations'
 import ConversationalAIEnhanced from '../components/ai/ConversationalAIEnhanced'
-import District3DMap from '../components/visualization/District3DMap'
+// import District3DMap from '../components/visualization/District3DMap'
 
 // RSC-like data fetching hook
 const useDashboardData = () => {
@@ -657,11 +657,17 @@ const DashboardPhase3: React.FC = () => {
                 </p>
               </div>
             </div>
+            {/* TODO: Re-enable after React 19 compatibility fix
             <District3DMap 
               data={sampleGeographicData}
               districtBounds={sampleDistrictBounds}
               onDataPointClick={handleDataPointClick}
             />
+            */}
+            <div className="tw-p-8 tw-text-center tw-text-text-secondary">
+              <p>3D Map visualization temporarily disabled due to React 19 compatibility.</p>
+              <p>Will be restored after library updates.</p>
+            </div>
           </AnimatedCard>
         </TabsContent>
         

@@ -28,7 +28,7 @@ const Login: React.FC = () => {
     dispatch(loginStart())
     
     try {
-      await authService.sendPin({ phone_number: phoneNumber })
+      await authService.sendPin({ phone: phoneNumber })
       setStep('pin')
     } catch (error: any) {
       dispatch(loginFailure(error.response?.data?.message || 'Failed to send PIN'))
@@ -40,7 +40,7 @@ const Login: React.FC = () => {
     dispatch(loginStart())
     
     try {
-      const response = await authService.verifyPin({ phone_number: phoneNumber, pin })
+      const response = await authService.verifyPin({ phone: phoneNumber, pin })
       dispatch(loginSuccess(response))
       navigate('/dashboard')
     } catch (error: any) {

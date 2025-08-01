@@ -467,7 +467,7 @@ const PredictiveModeling: React.FC = () => {
       {/* Metrics Cards */}
       {metrics && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -483,7 +483,7 @@ const PredictiveModeling: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -499,7 +499,7 @@ const PredictiveModeling: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -515,7 +515,7 @@ const PredictiveModeling: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -542,7 +542,7 @@ const PredictiveModeling: React.FC = () => {
       {/* Models Tab */}
       {activeTab === 0 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
+          <Grid xs={12} md={8}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -650,7 +650,7 @@ const PredictiveModeling: React.FC = () => {
           </Grid>
 
           {/* Model Details */}
-          <Grid item xs={12} md={4}>
+          <Grid xs={12} md={4}>
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 {selectedModel ? (
@@ -824,7 +824,7 @@ const PredictiveModeling: React.FC = () => {
       {/* Analytics Tab */}
       {activeTab === 2 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -847,7 +847,7 @@ const PredictiveModeling: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>

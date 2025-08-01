@@ -481,7 +481,7 @@ const ReportBuilder: React.FC = () => {
         {/* Reports Tab */}
         {activeTab === 0 && (
           <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid xs={12} md={8}>
               <Card>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -572,7 +572,7 @@ const ReportBuilder: React.FC = () => {
             </Grid>
 
             {/* Report Preview */}
-            <Grid item xs={12} md={4}>
+            <Grid xs={12} md={4}>
               <Card sx={{ height: '100%' }}>
                 <CardContent>
                   {selectedReport ? (

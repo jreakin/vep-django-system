@@ -314,7 +314,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -326,7 +326,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -338,7 +338,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -350,7 +350,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" gutterBottom>
@@ -366,7 +366,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
 
       <Grid container spacing={3}>
         {/* Map */}
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <Card>
             <CardContent sx={{ p: 0 }}>
               <Box sx={{ height: 600, position: 'relative' }}>
@@ -458,7 +458,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
         </Grid>
 
         {/* Territory List */}
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -610,7 +610,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
         <DialogTitle>Create New Territory</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 label="Territory Name"
                 value={newTerritory.name}
@@ -619,7 +619,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Type</InputLabel>
                 <Select
@@ -634,7 +634,7 @@ const TerritoryManager: React.FC<TerritoryManagerProps> = ({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Checkbox
