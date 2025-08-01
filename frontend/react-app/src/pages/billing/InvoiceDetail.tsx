@@ -111,6 +111,7 @@ const InvoiceDetail: React.FC = () => {
     } catch (error) {
       console.error('Failed to download invoice:', error)
       // Fallback to print
+      setDownloadError(true)
       window.print()
     }
   }
