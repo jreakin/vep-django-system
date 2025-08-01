@@ -216,7 +216,7 @@ const QuestionnaireBuilder: React.FC = () => {
           </Box>
 
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Controller
                 name={`questions.${index}.question_text`}
                 control={control}
@@ -235,7 +235,7 @@ const QuestionnaireBuilder: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <Controller
                 name={`questions.${index}.question_type`}
                 control={control}
@@ -254,7 +254,7 @@ const QuestionnaireBuilder: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <Controller
                 name={`questions.${index}.required`}
                 control={control}
@@ -269,7 +269,7 @@ const QuestionnaireBuilder: React.FC = () => {
 
             {/* Options for multiple choice questions */}
             {questionType === 'multiple_choice' && (
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
                   Answer Options
                 </Typography>
@@ -317,7 +317,7 @@ const QuestionnaireBuilder: React.FC = () => {
 
             {/* Scale configuration */}
             {questionType === 'scale' && (
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Alert severity="info" sx={{ mt: 1 }}>
                   Rating scale will be displayed as 1-5 stars or 1-10 numeric scale
                 </Alert>
@@ -325,7 +325,7 @@ const QuestionnaireBuilder: React.FC = () => {
             )}
 
             {/* Branch Logic */}
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMore />}>
                   <Typography variant="subtitle2">
@@ -443,7 +443,7 @@ const QuestionnaireBuilder: React.FC = () => {
         {activeTab === 0 && (
           <Box sx={{ mt: 2 }}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Controller
                   name="name"
                   control={control}
@@ -460,7 +460,7 @@ const QuestionnaireBuilder: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Controller
                   name="campaign_id"
                   control={control}
@@ -478,7 +478,7 @@ const QuestionnaireBuilder: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Controller
                   name="is_active"
                   control={control}
@@ -622,7 +622,7 @@ const QuestionnaireBuilder: React.FC = () => {
       {/* Questionnaires List */}
       <Grid container spacing={3}>
         {questionnaires.map((questionnaire) => (
-          <Grid item xs={12} md={6} lg={4} key={questionnaire.id}>
+          <Grid xs={12} md={6} lg={4} key={questionnaire.id}>
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>

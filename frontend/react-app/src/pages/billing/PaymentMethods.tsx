@@ -302,7 +302,7 @@ const PaymentMethods: React.FC = () => {
       ) : (
         <Grid container spacing={3}>
           {paymentMethods.map((method) => (
-            <Grid item xs={12} sm={6} key={method.id}>
+            <Grid xs={12} sm={6} key={method.id}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>

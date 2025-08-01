@@ -316,7 +316,7 @@ const UserManagement: React.FC = () => {
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="first_name"
               control={control}
@@ -333,7 +333,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="last_name"
               control={control}
@@ -350,7 +350,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="username"
               control={control}
@@ -367,7 +367,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="email"
               control={control}
@@ -392,7 +392,7 @@ const UserManagement: React.FC = () => {
           </Grid>
 
           {!isEdit && (
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Controller
                 name="password"
                 control={control}
@@ -411,7 +411,7 @@ const UserManagement: React.FC = () => {
             </Grid>
           )}
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="groups"
               control={control}
@@ -441,7 +441,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="is_staff"
               control={control}
@@ -454,7 +454,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="is_superuser"
               control={control}
@@ -468,13 +468,13 @@ const UserManagement: React.FC = () => {
           </Grid>
 
           {/* Profile Section */}
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Typography variant="h6" gutterBottom>
               Profile Information
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="profile.phone_number"
               control={control}
@@ -488,7 +488,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="profile.organization"
               control={control}
@@ -502,7 +502,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="profile.role"
               control={control}
@@ -516,7 +516,7 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="profile.timezone"
               control={control}
@@ -598,7 +598,7 @@ const UserManagement: React.FC = () => {
       {/* System Stats */}
       {systemStats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -616,7 +616,7 @@ const UserManagement: React.FC = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -634,7 +634,7 @@ const UserManagement: React.FC = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -652,7 +652,7 @@ const UserManagement: React.FC = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">

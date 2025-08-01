@@ -270,7 +270,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
           </Typography>
           
           <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
+            <Grid xs={12} md={3}>
               <TextField
                 fullWidth
                 label="Search"
@@ -287,7 +287,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               />
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>User</InputLabel>
                 <Select
@@ -305,7 +305,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>Action</InputLabel>
                 <Select
@@ -323,7 +323,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>Resource Type</InputLabel>
                 <Select
@@ -341,7 +341,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={1.5}>
+            <Grid xs={12} md={1.5}>
               <FormControl fullWidth>
                 <InputLabel>Severity</InputLabel>
                 <Select
@@ -358,7 +358,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={1.5}>
+            <Grid xs={12} md={1.5}>
               <Button
                 variant="outlined"
                 onClick={clearFilters}
@@ -368,7 +368,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
               </Button>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} md={6}>
               <Box display="flex" gap={2}>
                 <TextField
                   label="From Date"
@@ -516,7 +516,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
           {selectedLog && (
             <Box>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Typography variant="h6" gutterBottom>
                     Basic Information
                   </Typography>
@@ -560,7 +560,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
                   </List>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Typography variant="h6" gutterBottom>
                     Technical Details
                   </Typography>
@@ -591,7 +591,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
                 </Grid>
 
                 {Object.keys(selectedLog.changes).length > 0 && (
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="h6" gutterBottom>
                       Changes Made
@@ -610,7 +610,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({
                 )}
 
                 {Object.keys(selectedLog.metadata).length > 0 && (
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Typography variant="h6" gutterBottom>
                       Additional Metadata
                     </Typography>

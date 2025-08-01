@@ -223,7 +223,7 @@ const AdminInvoiceView: React.FC = () => {
       {/* Statistics Cards */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -235,7 +235,7 @@ const AdminInvoiceView: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -247,7 +247,7 @@ const AdminInvoiceView: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -259,7 +259,7 @@ const AdminInvoiceView: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -292,7 +292,7 @@ const AdminInvoiceView: React.FC = () => {
           </Box>
           
           <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
+            <Grid xs={12} md={3}>
               <TextField
                 fullWidth
                 label="Search"
@@ -309,7 +309,7 @@ const AdminInvoiceView: React.FC = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -326,7 +326,7 @@ const AdminInvoiceView: React.FC = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <TextField
                 fullWidth
                 label="From Date"
@@ -337,7 +337,7 @@ const AdminInvoiceView: React.FC = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={2}>
+            <Grid xs={12} md={2}>
               <TextField
                 fullWidth
                 label="To Date"
@@ -348,7 +348,7 @@ const AdminInvoiceView: React.FC = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={1.5}>
+            <Grid xs={12} md={1.5}>
               <TextField
                 fullWidth
                 label="Min Amount"
@@ -359,7 +359,7 @@ const AdminInvoiceView: React.FC = () => {
               />
             </Grid>
             
-            <Grid item xs={12} md={1.5}>
+            <Grid xs={12} md={1.5}>
               <TextField
                 fullWidth
                 label="Max Amount"

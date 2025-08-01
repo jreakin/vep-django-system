@@ -225,7 +225,7 @@ const QuestionnaireBuilder: React.FC = () => {
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="question_text"
               control={questionControl}
@@ -244,7 +244,7 @@ const QuestionnaireBuilder: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="question_type"
               control={questionControl}
@@ -263,7 +263,7 @@ const QuestionnaireBuilder: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="required"
               control={questionControl}
@@ -277,7 +277,7 @@ const QuestionnaireBuilder: React.FC = () => {
           </Grid>
 
           {watch('question_type') === 'multiple_choice' && (
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Typography variant="subtitle2" gutterBottom>
                 Answer Options (one per line)
               </Typography>
@@ -423,7 +423,7 @@ const QuestionnaireBuilder: React.FC = () => {
       {/* Questionnaires Grid */}
       <Grid container spacing={3}>
         {questionnaires.map((questionnaire) => (
-          <Grid item xs={12} md={6} lg={4} key={questionnaire.id}>
+          <Grid xs={12} md={6} lg={4} key={questionnaire.id}>
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -491,7 +491,7 @@ const QuestionnaireBuilder: React.FC = () => {
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6}>
+              <Grid xs={12} sm={6}>
                 <Controller
                   name="name"
                   control={control}
@@ -508,7 +508,7 @@ const QuestionnaireBuilder: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid xs={12} sm={6}>
                 <Controller
                   name="campaign_id"
                   control={control}
@@ -528,7 +528,7 @@ const QuestionnaireBuilder: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Controller
                   name="is_active"
                   control={control}
@@ -541,7 +541,7 @@ const QuestionnaireBuilder: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid xs={12}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                   <Typography variant="h6">
                     Questions ({questions.length})

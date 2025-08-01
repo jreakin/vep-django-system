@@ -226,7 +226,7 @@ const TerritoryManager: React.FC = () => {
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="name"
               control={control}
@@ -243,7 +243,7 @@ const TerritoryManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="description"
               control={control}
@@ -259,7 +259,7 @@ const TerritoryManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="state"
               control={control}
@@ -279,7 +279,7 @@ const TerritoryManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid xs={12} sm={6}>
             <Controller
               name="territory_type"
               control={control}
@@ -297,7 +297,7 @@ const TerritoryManager: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid xs={12}>
             <Controller
               name="is_active"
               control={control}
@@ -375,7 +375,7 @@ const TerritoryManager: React.FC = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -393,7 +393,7 @@ const TerritoryManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -411,7 +411,7 @@ const TerritoryManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">
@@ -429,7 +429,7 @@ const TerritoryManager: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center">

@@ -191,7 +191,7 @@ const InvoiceDetail: React.FC = () => {
         <CardContent>
           {/* Invoice Header */}
           <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} md={6}>
               <Box display="flex" alignItems="center" mb={2}>
                 {getStatusIcon(invoice.status)}
                 <Chip 
@@ -211,7 +211,7 @@ const InvoiceDetail: React.FC = () => {
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid xs={12} md={6}>
               <Box textAlign={{ xs: 'left', md: 'right' }}>
                 <Typography variant="h6" gutterBottom>
                   Bill To:
@@ -261,8 +261,8 @@ const InvoiceDetail: React.FC = () => {
           {/* Totals */}
           <Box mt={3}>
             <Grid container>
-              <Grid item xs={12} md={6} />
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6} />
+              <Grid xs={12} md={6}>
                 <Box>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography variant="body1">Subtotal:</Typography>

@@ -417,7 +417,7 @@ const IntegrationsDashboard: React.FC = () => {
       {/* Stats Cards */}
       {stats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -433,7 +433,7 @@ const IntegrationsDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -449,7 +449,7 @@ const IntegrationsDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -465,7 +465,7 @@ const IntegrationsDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -485,7 +485,7 @@ const IntegrationsDashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Integrations List */}
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -589,7 +589,7 @@ const IntegrationsDashboard: React.FC = () => {
         </Grid>
 
         {/* Recent Activity */}
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -759,11 +759,11 @@ const IntegrationsDashboard: React.FC = () => {
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid xs={6}>
                       <Typography variant="body2">Total Requests:</Typography>
                       <Typography variant="h6">{selectedIntegration.total_requests.toLocaleString()}</Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid xs={6}>
                       <Typography variant="body2">Error Count:</Typography>
                       <Typography variant="h6" color="error.main">{selectedIntegration.error_count}</Typography>
                     </Grid>

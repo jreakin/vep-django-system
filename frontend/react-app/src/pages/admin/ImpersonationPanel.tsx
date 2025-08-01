@@ -400,7 +400,7 @@ const ImpersonationPanel: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Start Impersonation */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -409,7 +409,7 @@ const ImpersonationPanel: React.FC = () => {
               
               {/* Filters */}
               <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <TextField
                     fullWidth
                     label="Search Users"
@@ -420,7 +420,7 @@ const ImpersonationPanel: React.FC = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <FormControl fullWidth>
                     <InputLabel>Role Filter</InputLabel>
                     <Select
@@ -515,7 +515,7 @@ const ImpersonationPanel: React.FC = () => {
         </Grid>
 
         {/* Active Sessions */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -573,7 +573,7 @@ const ImpersonationPanel: React.FC = () => {
         </Grid>
 
         {/* Impersonation Logs */}
-        <Grid item xs={12}>
+        <Grid xs={12}>
           <Accordion defaultExpanded>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography variant="h6">

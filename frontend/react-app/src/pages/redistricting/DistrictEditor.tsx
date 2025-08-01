@@ -303,7 +303,7 @@ const DistrictEditor: React.FC<DistrictEditorProps> = ({ planId }) => {
 
       <Grid container spacing={2} sx={{ flexGrow: 1 }}>
         {/* Districts Panel */}
-        <Grid item xs={12} md={3}>
+        <Grid xs={12} md={3}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'center', mb: 2 }}>
@@ -357,7 +357,7 @@ const DistrictEditor: React.FC<DistrictEditorProps> = ({ planId }) => {
         </Grid>
 
         {/* Map Area */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ height: '100%', p: 1 }}>
               <MapContainer
@@ -405,7 +405,7 @@ const DistrictEditor: React.FC<DistrictEditorProps> = ({ planId }) => {
         </Grid>
 
         {/* District Details Panel */}
-        <Grid item xs={12} md={3}>
+        <Grid xs={12} md={3}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               {selectedDistrict ? (

@@ -403,7 +403,7 @@ const ComplianceAnalyzer: React.FC<ComplianceAnalyzerProps> = ({
 
       <Grid container spacing={3}>
         {/* Metrics */}
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -482,7 +482,7 @@ const ComplianceAnalyzer: React.FC<ComplianceAnalyzerProps> = ({
         </Grid>
 
         {/* VRA Compliance */}
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
