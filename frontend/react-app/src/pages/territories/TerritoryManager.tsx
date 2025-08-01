@@ -226,7 +226,7 @@ const TerritoryManager: React.FC = () => {
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <Controller
               name="name"
               control={control}
