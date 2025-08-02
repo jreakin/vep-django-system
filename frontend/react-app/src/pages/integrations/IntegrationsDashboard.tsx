@@ -117,6 +117,8 @@ const IntegrationsDashboard: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null)
   const [configDialog, setConfigDialog] = useState(false)
   const [addIntegrationDialog, setAddIntegrationDialog] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState(false)
+  const [integrationToDelete, setIntegrationToDelete] = useState<Integration | null>(null)
   const [newIntegrationName, setNewIntegrationName] = useState('')
   const [newIntegrationType, setNewIntegrationType] = useState('')
   const [newIntegrationProvider, setNewIntegrationProvider] = useState('')
@@ -133,6 +135,21 @@ const IntegrationsDashboard: React.FC = () => {
     { id: 'targetsmartapi', name: 'TargetSmart', type: 'api', category: 'Data' },
     { id: 'webhook_generic', name: 'Generic Webhook', type: 'webhook', category: 'Custom' }
   ]
+
+  // Auto-dismiss notifications after 5 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [success])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 7000) // Keep error messages a bit longer
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   useEffect(() => {
     loadIntegrations()
@@ -214,7 +231,7 @@ const IntegrationsDashboard: React.FC = () => {
       
       setIntegrations(mockIntegrations)
     } catch (err) {
-      setError('Failed to load integrations')
+      setError('Failed to load integrations. Please check your network connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -284,7 +301,7 @@ const IntegrationsDashboard: React.FC = () => {
       
       setSuccess(`Integration ${newStatus === 'active' ? 'activated' : 'deactivated'}`)
     } catch (err) {
-      setError('Failed to toggle integration')
+      setError('Failed to toggle integration. Please try again or contact support if the issue persists.')
     } finally {
       setLoading(false)
     }
@@ -305,10 +322,39 @@ const IntegrationsDashboard: React.FC = () => {
         setError(`Integration test failed for ${integration.name} - Check configuration`)
       }
     } catch (err) {
-      setError('Test failed')
+      setError('Integration test failed. Please verify your configuration and network connection.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleDeleteIntegration = async (integration: Integration) => {
+    setIntegrationToDelete(integration)
+    setDeleteDialog(true)
+  }
+
+  const confirmDeleteIntegration = async () => {
+    if (!integrationToDelete) return
+
+    setLoading(true)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      setIntegrations(prev => prev.filter(i => i.id !== integrationToDelete.id))
+      setSuccess(`Integration "${integrationToDelete.name}" has been deleted successfully`)
+      setDeleteDialog(false)
+      setIntegrationToDelete(null)
+    } catch (err) {
+      setError('Failed to delete integration. Please try again or contact support.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRetry = (action: () => void) => {
+    setError(null)
+    action()
   }
 
   const handleAddIntegration = async () => {
@@ -349,7 +395,7 @@ const IntegrationsDashboard: React.FC = () => {
       setNewIntegrationType('')
       setNewIntegrationProvider('')
     } catch (err) {
-      setError('Failed to add integration')
+      setError('Failed to add integration. Please check your configuration and try again. If the issue persists, contact support.')
     } finally {
       setLoading(false)
     }
@@ -403,7 +449,20 @@ const IntegrationsDashboard: React.FC = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }} 
+          onClose={() => setError(null)}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              onClick={() => handleRetry(() => loadIntegrations())}
+            >
+              Retry
+            </Button>
+          }
+        >
           {error}
         </Alert>
       )}
@@ -560,6 +619,7 @@ const IntegrationsDashboard: React.FC = () => {
                               setSelectedIntegration(integration)
                               setConfigDialog(true)
                             }}
+                            title="Configure integration"
                           >
                             <Settings />
                           </IconButton>
@@ -567,6 +627,7 @@ const IntegrationsDashboard: React.FC = () => {
                             size="small"
                             onClick={() => handleTestIntegration(integration)}
                             disabled={loading}
+                            title="Test integration"
                           >
                             <Sync />
                           </IconButton>
@@ -575,8 +636,18 @@ const IntegrationsDashboard: React.FC = () => {
                             onClick={() => handleToggleIntegration(integration)}
                             disabled={loading}
                             color={integration.status === 'active' ? 'error' : 'success'}
+                            title={integration.status === 'active' ? 'Deactivate' : 'Activate'}
                           >
                             <PowerSettingsNew />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteIntegration(integration)}
+                            disabled={loading}
+                            color="error"
+                            title="Delete integration"
+                          >
+                            <Delete />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -777,6 +848,51 @@ const IntegrationsDashboard: React.FC = () => {
           <Button onClick={() => setConfigDialog(false)}>Close</Button>
           <Button variant="contained" startIcon={<Settings />}>
             Update Configuration
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteDialog} 
+        onClose={() => setDeleteDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ErrorIcon color="error" sx={{ mr: 2 }} />
+            Confirm Integration Deletion
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Are you sure you want to delete the integration "{integrationToDelete?.name}"?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            This action cannot be undone. All configuration, historical data, and statistics for this integration will be permanently removed.
+          </Typography>
+          {integrationToDelete?.status === 'active' && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              This integration is currently active. Deleting it may disrupt ongoing processes.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialog(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={confirmDeleteIntegration}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : <Delete />}
+          >
+            {loading ? 'Deleting...' : 'Delete Integration'}
           </Button>
         </DialogActions>
       </Dialog>
